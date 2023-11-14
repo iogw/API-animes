@@ -46,7 +46,7 @@ server.post('/animes', async (req, res) => {
   const insertAnime =
     'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
 
-  console.log('Enviando datos a la base de datos');
+  console.log('Sending data to database');
   try {
     const conn = await getConnection();
     const [resultAnime] = await conn.query(insertAnime, [
@@ -63,7 +63,7 @@ server.post('/animes', async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      error: 'Error en el servidor',
+      error: 'database error',
     });
   }
 });
@@ -72,10 +72,8 @@ server.post('/animes', async (req, res) => {
 /* Example
 ​http://localhost:3113/animes */
 server.get('/animes', async (req, res) => {
-  console.log('Haciendo petición a la base de datos');
-
   const queryAllAnimes = 'SELECT * FROM animes';
-
+  console.log('Querying database');
   try {
     const conn = await getConnection();
     const [results] = await conn.query(queryAllAnimes);
@@ -92,7 +90,7 @@ server.get('/animes', async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      error: 'Error en el servidor',
+      error: 'database error',
     });
   }
 });
@@ -110,44 +108,74 @@ server.put('/animes/:animeId', async (req, res) => {
   const { title, year, chapters } = req.body;
 
   //Check if anime exists in db by id
-  console.log('Comprobando si existe anime');
+  console.log('Checking if anime existes');
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ${paramsId};`;
-
-  const conn = await getConnection();
-  const [animesSearch] = await conn.query(queryIfAnimeExists);
-
-  //not exists:
-  if (animesSearch.length === 0) {
-    conn.end();
-
-    return res.status(200).json({
-      success: false,
-      error: 'Anime no encontrado',
-    });
-  }
-  //Exists: send data to modify in db
-
-  console.log('Enviando datos a la base de datos');
-
   const queryToModifyAnime =
     'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
-  const [modifyAnime] = await conn.query(queryToModifyAnime, [
-    title,
-    year,
-    chapters,
-    paramsId,
-  ]);
+  try {
+    const conn = await getConnection();
+    // Get data to check if exists and to send in response
+    const [animesSearch] = await conn.query(queryIfAnimeExists);
+    //doesnt exist:
+    if (animesSearch.length === 0) {
+      conn.end();
+      return res.status(404).json({
+        success: false,
+        error: 'anime not found',
+      });
+    }
+    //Exists: send data to modify in db
+    console.log('Sending data to database');
+    const [modifyAnime] = await conn.query(queryToModifyAnime, [
+      title,
+      year,
+      chapters,
+      paramsId,
+    ]);
+    //Get new data to send in response
+    const [animesModified] = await conn.query(queryIfAnimeExists);
+    conn.end();
 
-  //Get new data to send in the response
-  const [animesModified] = await conn.query(queryIfAnimeExists);
+    res.status(200).json({
+      success: true,
+      msg: 'data modified successfully',
+      'previous data': animesSearch[0],
+      'new data': animesModified[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
+
+//Endpoint to delete anime
+/* Example 
+  ​http://localhost:3113/animes/14
+*/
+server.delete('/animes/:animeId', async (req, res) => {
+  console.log('Querying database');
+  const paramsId = req.params.animeId;
+
+  const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
+  const conn = await getConnection();
+  const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
+  if (animes.length === 0) {
+    conn.end();
+    return res.status(404).json({
+      success: false,
+      error: 'anime not found',
+    });
+  }
+  const queryDeleteAnime = 'DELETE FROM animes WHERE idAnime = ?;';
+  const [animeDeleted] = await conn.query(queryDeleteAnime, [paramsId]);
+  conn.end();
 
   res.status(200).json({
     success: true,
-    message: 'data modified successfully',
-    'previous data': animesSearch[0],
-    'new data': animesModified[0],
+    msg: `Anime "${animes[0].title}" deleted successfully`,
   });
-
-  conn.end();
 });
