@@ -12,7 +12,7 @@ server.use(cors());
 server.use(express.json());
 
 // SERVER PORT
-const serverPort = 3110;
+const serverPort = 3113;
 server.listen(serverPort, () =>
   console.log(`Server listening at http://localhost:${serverPort}`)
 );
@@ -31,3 +31,33 @@ async function getConnection() {
   );
   return connection;
 }
+
+//Endpoint to insert data in animes table
+
+server.post('/add/anime', async (req, res) => {
+  const { title, year, chapters } = req.body;
+
+  const insertAnime =
+    'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
+
+  console.log('Enviando datos a la base de datos');
+  try {
+    const conn = await getConnection();
+    const [resultAnime] = await conn.query(insertAnime, [
+      title,
+      year,
+      chapters,
+    ]);
+    conn.end();
+    res.status(200).json({
+      success: true,
+      idNewAnime: resultAnime.insertId,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(501).json({
+      success: false,
+      error: 'Error en el servidor',
+    });
+  }
+});
