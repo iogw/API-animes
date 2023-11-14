@@ -33,8 +33,14 @@ async function getConnection() {
 }
 
 //Endpoint to insert data in animes table
-
-server.post('/add/anime', async (req, res) => {
+/* Example
+  ​http://localhost:3113/animes/
+  {
+  "title": "Naruto",
+  "year": "2010",
+  "chapters": "300"
+} */
+server.post('/animes', async (req, res) => {
   const { title, year, chapters } = req.body;
 
   const insertAnime =
@@ -55,9 +61,93 @@ server.post('/add/anime', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(501).json({
+    res.status(500).json({
       success: false,
       error: 'Error en el servidor',
     });
   }
+});
+
+//Endpoint to list all animes
+/* Example
+​http://localhost:3113/animes */
+server.get('/animes', async (req, res) => {
+  console.log('Haciendo petición a la base de datos');
+
+  const queryAllAnimes = 'SELECT * FROM animes';
+
+  try {
+    const conn = await getConnection();
+    const [results] = await conn.query(queryAllAnimes);
+
+    const numOfElements = results.length;
+
+    res.json({
+      success: true,
+      info: { count: numOfElements },
+      results: results,
+    });
+    conn.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'Error en el servidor',
+    });
+  }
+});
+
+//Endpoint to update an anime
+/* Example
+  ​http://localhost:3113/animes/14
+  {
+  "title": "Kaze no Stigma",
+  "year": "2023",
+  "chapters": "10"
+} */
+server.put('/animes/:animeId', async (req, res) => {
+  const paramsId = req.params.animeId;
+  const { title, year, chapters } = req.body;
+
+  //Check if anime exists in db by id
+  console.log('Comprobando si existe anime');
+
+  const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ${paramsId};`;
+
+  const conn = await getConnection();
+  const [animesSearch] = await conn.query(queryIfAnimeExists);
+
+  //not exists:
+  if (animesSearch.length === 0) {
+    conn.end();
+
+    return res.status(200).json({
+      success: false,
+      error: 'Anime no encontrado',
+    });
+  }
+  //Exists: send data to modify in db
+
+  console.log('Enviando datos a la base de datos');
+
+  const queryToModifyAnime =
+    'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
+  const [modifyAnime] = await conn.query(queryToModifyAnime, [
+    title,
+    year,
+    chapters,
+    paramsId,
+  ]);
+
+  //Get new data to send in the response
+  const [animesModified] = await conn.query(queryIfAnimeExists);
+
+  res.status(200).json({
+    success: true,
+    message: 'data modified successfully',
+    'previous data': animesSearch[0],
+    'new data': animesModified[0],
+  });
+
+  conn.end();
 });
