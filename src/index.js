@@ -183,6 +183,7 @@ server.post('/animes', authenticateToken, async (req, res) => {
     conn.end();
     res.status(200).json({
       success: true,
+      message: 'Anime created',
       idNewAnime: resultAnime.insertId,
     });
   } catch (error) {
