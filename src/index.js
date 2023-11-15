@@ -6,6 +6,33 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
+//AUTENTICATION AND AUTHORITATION
+const generateToken = (payload) => {
+  const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '2h' });
+  return token;
+};
+
+const verifyToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    return decoded;
+  } catch (err) {
+    return null;
+  }
+};
+// Authoritation middleware
+const authenticateToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Token not provided' });
+  }
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  req.user = decoded;
+  next();
+};
 //CREATE & CONFIG SERVER
 const server = express();
 server.use(cors());
@@ -27,22 +54,79 @@ async function getConnection() {
   await connection.connect();
 
   console.log(
-    `Conexión establecida con la base de datos (identificador=${connection.threadId})`
+    `Database connection established (identifier=${connection.threadId})`
   );
   return connection;
 }
 
+//to input year validations
 const maxYear = new Date().getFullYear() + 2;
 
+//Endpoint to list all animes
+server.get('/animes', async (req, res) => {
+  const queryAllAnimes = 'SELECT * FROM animes';
+
+  console.log('Querying database');
+  try {
+    const conn = await getConnection();
+    const [results] = await conn.query(queryAllAnimes);
+
+    const numOfElements = results.length;
+
+    res.json({
+      success: true,
+      info: { count: numOfElements },
+      results: results,
+    });
+    conn.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
+
+//Endpoint to list one anime
+server.get('/animes/:idAnime', async (req, res) => {
+  const paramsId = req.params.idAnime;
+  console.log(paramsId);
+  //input validation
+  if (isNaN(parseInt(paramsId))) {
+    return res.status(400).json({
+      success: false,
+      error: 'id must be a number',
+    });
+  }
+  const queryIdAnime = `SELECT * FROM animes WHERE idAnime = ?;`;
+
+  console.log('Querying database');
+  try {
+    const conn = await getConnection();
+    const [animes] = await conn.query(queryIdAnime, [paramsId]);
+    const anime = animes[0];
+    conn.end();
+    if (animes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'anime not found',
+      });
+    }
+    res.json({
+      success: true,
+      results: anime,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
 //Endpoint to insert data in animes table
-/* Example
-  ​http://localhost:3113/animes/
-  {
-  "title": "Naruto",
-  "year": "2010",
-  "chapters": "300"
-} */
-server.post('/animes', async (req, res) => {
+server.post('/animes', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   //input validation
@@ -106,72 +190,6 @@ server.post('/animes', async (req, res) => {
   }
 });
 
-//Endpoint to list all animes
-/* Example
-​http://localhost:3113/animes */
-server.get('/animes', async (req, res) => {
-  const queryAllAnimes = 'SELECT * FROM animes';
-
-  console.log('Querying database');
-  try {
-    const conn = await getConnection();
-    const [results] = await conn.query(queryAllAnimes);
-
-    const numOfElements = results.length;
-
-    res.json({
-      success: true,
-      info: { count: numOfElements },
-      results: results,
-    });
-    conn.end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
-  }
-});
-
-//Endpoint to list one anime
-server.get('/animes/:idAnime', async (req, res) => {
-  const paramsId = req.params.idAnime;
-  console.log(paramsId);
-  //input validation
-  if (isNaN(parseInt(paramsId))) {
-    return res.status(400).json({
-      success: false,
-      error: 'id must be a number',
-    });
-  }
-  const queryIdAnime = `SELECT * FROM animes WHERE idAnime = ?;`;
-
-  console.log('Querying database');
-  try {
-    const conn = await getConnection();
-    const [animes] = await conn.query(queryIdAnime, [paramsId]);
-    const anime = animes[0];
-    conn.end();
-    if (animes.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'anime not found',
-      });
-    }
-    res.json({
-      success: true,
-      results: anime,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
-  }
-});
-
 //Endpoint to update an anime
 /* Example
   ​http://localhost:3113/animes/14
@@ -180,7 +198,7 @@ server.get('/animes/:idAnime', async (req, res) => {
   "year": "2023",
   "chapters": "10"
 } */
-server.put('/animes/:animeId', async (req, res) => {
+server.put('/animes/:animeId', authenticateToken, async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
 
@@ -265,7 +283,7 @@ server.put('/animes/:animeId', async (req, res) => {
 /* Example 
   ​http://localhost:3113/animes/14
 */
-server.delete('/animes/:animeId', async (req, res) => {
+server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
   if (isNaN(parseInt(paramsId))) {
@@ -302,3 +320,138 @@ server.delete('/animes/:animeId', async (req, res) => {
     });
   }
 });
+
+//Endpoint user registration
+/* Example
+  ​http://localhost:3113/signup/
+  {
+  "username": "Irene",
+  "email": "irene@gmail.com",
+  "password": "12345"
+} */
+server.post('/signup', async (req, res) => {
+  const { username, email, password } = req.body;
+  //input validation
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'username, email and password are required fields',
+    });
+  }
+  if (!(email.includes('@') && email.includes('.'))) {
+    return res.status(400).json({
+      success: false,
+      error: 'email format incorrect',
+    });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({
+      success: false,
+      error: 'password must be at least 8 characters long',
+    });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  //check if email already exists
+  const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
+
+  try {
+    const conn = await getConnection();
+    const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
+    // If already exists
+    if (user[0]) {
+      conn.end();
+      return res.json({
+        success: false,
+        error: 'email already registered',
+      });
+    }
+    // If not: create token, add user to db and response ok+token
+    const queryAddUser =
+      'INSERT INTO users (username,email,password) VALUES (?,?,?)';
+
+    let infoForToken = {
+      username: username,
+      email: email,
+      passwordHash: passwordHash,
+    };
+    const token = generateToken(infoForToken);
+
+    const [newUser] = await conn.query(queryAddUser, [
+      username,
+      email,
+      passwordHash,
+    ]);
+    conn.end();
+    res.json({ success: true, token: token, id: newUser.insertId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
+
+//Endpoint login
+/* Example
+  ​http://localhost:3113/login/
+  {
+  "email": "irene@gmail.com",
+  "password": "12345"
+} */
+server.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'email and password are required fields',
+    });
+  }
+  if (!(email.includes('@') && email.includes('.'))) {
+    return res.status(400).json({
+      success: false,
+      error: 'email format incorrect',
+    });
+  }
+
+  //Check if user exists
+  const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
+  try {
+    const conn = await getConnection();
+    const [users] = await conn.query(querySearchUser, [email]);
+    conn.end();
+
+    const user = users[0];
+    //Check if user exists and pass is correct (bcrypt.compare)
+    const userAndPassOk = !user
+      ? false
+      : await bcrypt.compare(password, user.password);
+    //If not exists or pass wrong
+    if (!userAndPassOk) {
+      return res
+        .status(401)
+        .json({ success: false, errorMessage: 'Invalid credentials' });
+    }
+    //If exists
+    const infoForToken = {
+      username: user.email,
+      id: user.id,
+    };
+    const token = generateToken(infoForToken);
+    return res.status(200).json({
+      success: true,
+      token,
+      username: user.username,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
+
+module.exports = server;
