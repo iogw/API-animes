@@ -54,7 +54,7 @@ async function getConnection() {
   await connection.connect();
 
   console.log(
-    `Conexión establecida con la base de datos (identificador=${connection.threadId})`
+    `Database connection established (identifier=${connection.threadId})`
   );
   return connection;
 }
@@ -89,13 +89,6 @@ server.get('/animes', async (req, res) => {
 });
 
 //Endpoint to insert data in animes table
-/* Example
-  ​http://localhost:3113/animes/
-  {
-  "title": "Naruto",
-  "year": "2010",
-  "chapters": "300"
-} */
 server.post('/animes', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
@@ -363,7 +356,7 @@ server.post('/signup', async (req, res) => {
   }
 });
 
-//Enspoint login
+//Endpoint login
 /* Example
   ​http://localhost:3113/login/
   {
@@ -423,3 +416,6 @@ server.post('/login', async (req, res) => {
     });
   }
 });
+
+
+module.exports = server;
