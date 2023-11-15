@@ -32,6 +32,8 @@ async function getConnection() {
   return connection;
 }
 
+const maxYear = new Date().getFullYear() + 2;
+
 //Endpoint to insert data in animes table
 /* Example
   ​http://localhost:3113/animes/
@@ -42,7 +44,7 @@ async function getConnection() {
 } */
 server.post('/animes', async (req, res) => {
   const { title, year, chapters } = req.body;
-  
+
   //input validation
   if (!title || !year || !chapters) {
     return res.status(400).json({
@@ -62,7 +64,6 @@ server.post('/animes', async (req, res) => {
       error: 'year and chapters must be numbers',
     });
   }
-  const maxYear = new Date().getFullYear() + 3;
   if (!(1900 < parseInt(year) && parseInt(year) < maxYear)) {
     return res.status(400).json({
       success: false,
@@ -110,6 +111,7 @@ server.post('/animes', async (req, res) => {
 ​http://localhost:3113/animes */
 server.get('/animes', async (req, res) => {
   const queryAllAnimes = 'SELECT * FROM animes';
+
   console.log('Querying database');
   try {
     const conn = await getConnection();
@@ -143,6 +145,38 @@ server.get('/animes', async (req, res) => {
 server.put('/animes/:animeId', async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
+
+  //input validation
+  if (isNaN(parseInt(paramsId))) {
+    return res.status(400).json({
+      success: false,
+      error: 'id must be a number',
+    });
+  }
+  if (!title || !year || !chapters) {
+    return res.status(400).json({
+      success: false,
+      error: 'title, year and chapters are required fields',
+    });
+  }
+  if (typeof title !== 'string') {
+    return res.status(400).json({
+      success: false,
+      error: 'title must be text',
+    });
+  }
+  if (isNaN(parseInt(year)) || isNaN(parseInt(chapters))) {
+    return res.status(400).json({
+      success: false,
+      error: 'year and chapters must be numbers',
+    });
+  }
+  if (!(1900 < parseInt(year) && parseInt(year) < maxYear)) {
+    return res.status(400).json({
+      success: false,
+      error: `year must be after 1900 and before ${maxYear}`,
+    });
+  }
 
   //Check if anime exists in db by id
   console.log('Checking if anime existes');
@@ -196,6 +230,12 @@ server.put('/animes/:animeId', async (req, res) => {
 server.delete('/animes/:animeId', async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
+  if (isNaN(parseInt(paramsId))) {
+    return res.status(400).json({
+      success: false,
+      error: 'id must be a number',
+    });
+  }
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
   try {
@@ -214,7 +254,7 @@ server.delete('/animes/:animeId', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      msg: `Anime "${animes[0].title}" deleted successfully`,
+      msg: `anime "${animes[0].title}" deleted successfully`,
     });
   } catch (error) {
     console.error(error);
