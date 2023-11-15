@@ -59,10 +59,10 @@ async function getConnection() {
   return connection;
 }
 
+//to input year validations
 const maxYear = new Date().getFullYear() + 2;
+
 //Endpoint to list all animes
-/* Example
-​http://localhost:3113/animes */
 server.get('/animes', async (req, res) => {
   const queryAllAnimes = 'SELECT * FROM animes';
 
