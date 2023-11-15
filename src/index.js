@@ -296,40 +296,53 @@ server.delete('/animes/:animeId', async (req, res) => {
 /* Example
   ​http://localhost:3113/signup/
   {
-  "name": "Irene",
+  "username": "Irene",
   "email": "irene@gmail.com",
   "password": "12345"
 } */
 server.post('/signup', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { username, email, password } = req.body;
   const passwordHash = await bcrypt.hash(password, 10);
 
   //check if email already exists
   const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
 
-  const conn = await getConnection();
-  const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
-  // If already exists
-  if (user[0]) {
+  try {
+    const conn = await getConnection();
+    const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
+    // If already exists
+    if (user[0]) {
+      conn.end();
+      return res.json({
+        success: false,
+        error: 'email already registered',
+      });
+    }
+    // If not: create token, add user to db and response ok+token
+    const queryAddUser =
+      'INSERT INTO users (username,email,password) VALUES (?,?,?)';
+
+    let infoForToken = {
+      username: username,
+      email: email,
+      passwordHash: passwordHash,
+    };
+    const token = generateToken(infoForToken);
+
+    const [newUser] = await conn.query(queryAddUser, [
+      username,
+      email,
+      passwordHash,
+    ]);
     conn.end();
-    return res.json({
+    res.json({ success: true, token: token, id: newUser.insertId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
       success: false,
-      error: 'email already registered',
+      error: 'database error',
     });
   }
-  // If not: create token, add user to db and response ok+token
-  const queryAddUser = 'INSERT INTO users (name,email,password) VALUES (?,?,?)';
-
-  let infoForToken = {
-    name: name,
-    email: email,
-    passwordHash: passwordHash,
-  };
-  const token = generateToken(infoForToken);
-
-  const [newUser] = await conn.query(queryAddUser, [name, email, passwordHash]);
-  conn.end();
-  res.json({ success: true, token: token, id: newUser.insertId });
 });
 
 //Enspoint login
@@ -344,31 +357,38 @@ server.post('/login', async (req, res) => {
 
   //Check if user exists
   const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
-  const conn = await getConnection();
-  const [users] = await conn.query(querySearchUser, [email]);
-  conn.end();
+  try {
+    const conn = await getConnection();
+    const [users] = await conn.query(querySearchUser, [email]);
+    conn.end();
 
-  const user = users[0];
-  //Check if user exists and pass is correct (bcrypt.compare)
-  const userAndPassOk = !user
-    ? false
-    : await bcrypt.compare(password, user.password);
-  //If not exists or pass wrong
-  if (!userAndPassOk) {
-    return res
-      .status(401)
-      .json({ success: false, errorMessage: 'Invalid credentials' });
+    const user = users[0];
+    //Check if user exists and pass is correct (bcrypt.compare)
+    const userAndPassOk = !user
+      ? false
+      : await bcrypt.compare(password, user.password);
+    //If not exists or pass wrong
+    if (!userAndPassOk) {
+      return res
+        .status(401)
+        .json({ success: false, errorMessage: 'Invalid credentials' });
+    }
+    //If exists
+    const infoForToken = {
+      username: user.email,
+      id: user.id,
+    };
+    const token = generateToken(infoForToken);
+    return res.status(200).json({
+      success: true,
+      token,
+      username: user.username,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
   }
-  //If exists
-  const infoForToken = {
-    username: user.email,
-    id: user.id,
-  };
-  const token = generateToken(infoForToken);
-  res.status(200).json({
-    success: true,
-    token,
-    email: user.email,
-    name: user.name,
-  });
 });
