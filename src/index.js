@@ -302,8 +302,27 @@ server.delete('/animes/:animeId', async (req, res) => {
 } */
 server.post('/signup', async (req, res) => {
   const { username, email, password } = req.body;
-  const passwordHash = await bcrypt.hash(password, 10);
+  //input validation
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'username, email and password are required fields',
+    });
+  }
+  if (!(email.includes('@') && email.includes('.'))) {
+    return res.status(400).json({
+      success: false,
+      error: 'email format incorrect',
+    });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({
+      success: false,
+      error: 'password must be at least 8 characters long',
+    });
+  }
 
+  const passwordHash = await bcrypt.hash(password, 10);
   //check if email already exists
   const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
 
@@ -355,6 +374,19 @@ server.post('/signup', async (req, res) => {
 server.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'email and password are required fields',
+    });
+  }
+  if (!(email.includes('@') && email.includes('.'))) {
+    return res.status(400).json({
+      success: false,
+      error: 'email format incorrect',
+    });
+  }
+  
   //Check if user exists
   const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
   try {
