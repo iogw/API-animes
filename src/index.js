@@ -42,13 +42,50 @@ async function getConnection() {
 } */
 server.post('/animes', async (req, res) => {
   const { title, year, chapters } = req.body;
+  
+  //input validation
+  if (!title || !year || !chapters) {
+    return res.status(400).json({
+      success: false,
+      error: 'title, year and chapters are required fields',
+    });
+  }
+  if (typeof title !== 'string') {
+    return res.status(400).json({
+      success: false,
+      error: 'title must be text',
+    });
+  }
+  if (isNaN(parseInt(year)) || isNaN(parseInt(chapters))) {
+    return res.status(400).json({
+      success: false,
+      error: 'year and chapters must be numbers',
+    });
+  }
+  const maxYear = new Date().getFullYear() + 3;
+  if (!(1900 < parseInt(year) && parseInt(year) < maxYear)) {
+    return res.status(400).json({
+      success: false,
+      error: `year must be after 1900 and before ${maxYear}`,
+    });
+  }
 
   const insertAnime =
     'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
+  const queryCheckIfTitleExists = 'SELECT * FROM animes WHERE title = ?';
 
   console.log('Sending data to database');
   try {
     const conn = await getConnection();
+    //check if the title already exists
+    const [animeByTitle] = await conn.query(queryCheckIfTitleExists, [title]);
+    if (animeByTitle.length !== 0) {
+      conn.end();
+      return res.status(400).json({
+        success: false,
+        error: 'This title already exists',
+      });
+    }
     const [resultAnime] = await conn.query(insertAnime, [
       title,
       year,
@@ -161,21 +198,29 @@ server.delete('/animes/:animeId', async (req, res) => {
   const paramsId = req.params.animeId;
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
-  const conn = await getConnection();
-  const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
-  if (animes.length === 0) {
+  try {
+    const conn = await getConnection();
+    const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
+    if (animes.length === 0) {
+      conn.end();
+      return res.status(404).json({
+        success: false,
+        error: 'anime not found',
+      });
+    }
+    const queryDeleteAnime = 'DELETE FROM animes WHERE idAnime = ?;';
+    const [animeDeleted] = await conn.query(queryDeleteAnime, [paramsId]);
     conn.end();
-    return res.status(404).json({
+
+    res.status(200).json({
+      success: true,
+      msg: `Anime "${animes[0].title}" deleted successfully`,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
       success: false,
-      error: 'anime not found',
+      error: 'database error',
     });
   }
-  const queryDeleteAnime = 'DELETE FROM animes WHERE idAnime = ?;';
-  const [animeDeleted] = await conn.query(queryDeleteAnime, [paramsId]);
-  conn.end();
-
-  res.status(200).json({
-    success: true,
-    msg: `Anime "${animes[0].title}" deleted successfully`,
-  });
 });
