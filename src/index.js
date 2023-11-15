@@ -60,6 +60,33 @@ async function getConnection() {
 }
 
 const maxYear = new Date().getFullYear() + 2;
+//Endpoint to list all animes
+/* Example
+​http://localhost:3113/animes */
+server.get('/animes', async (req, res) => {
+  const queryAllAnimes = 'SELECT * FROM animes';
+
+  console.log('Querying database');
+  try {
+    const conn = await getConnection();
+    const [results] = await conn.query(queryAllAnimes);
+
+    const numOfElements = results.length;
+
+    res.json({
+      success: true,
+      info: { count: numOfElements },
+      results: results,
+    });
+    conn.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
 
 //Endpoint to insert data in animes table
 /* Example
@@ -69,7 +96,7 @@ const maxYear = new Date().getFullYear() + 2;
   "year": "2010",
   "chapters": "300"
 } */
-server.post('/animes', async (req, res) => {
+server.post('/animes', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   //input validation
@@ -133,34 +160,6 @@ server.post('/animes', async (req, res) => {
   }
 });
 
-//Endpoint to list all animes
-/* Example
-​http://localhost:3113/animes */
-server.get('/animes', async (req, res) => {
-  const queryAllAnimes = 'SELECT * FROM animes';
-
-  console.log('Querying database');
-  try {
-    const conn = await getConnection();
-    const [results] = await conn.query(queryAllAnimes);
-
-    const numOfElements = results.length;
-
-    res.json({
-      success: true,
-      info: { count: numOfElements },
-      results: results,
-    });
-    conn.end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
-  }
-});
-
 //Endpoint to update an anime
 /* Example
   ​http://localhost:3113/animes/14
@@ -169,7 +168,7 @@ server.get('/animes', async (req, res) => {
   "year": "2023",
   "chapters": "10"
 } */
-server.put('/animes/:animeId', async (req, res) => {
+server.put('/animes/:animeId', authenticateToken, async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
 
@@ -254,7 +253,7 @@ server.put('/animes/:animeId', async (req, res) => {
 /* Example 
   ​http://localhost:3113/animes/14
 */
-server.delete('/animes/:animeId', async (req, res) => {
+server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
   if (isNaN(parseInt(paramsId))) {
@@ -386,7 +385,7 @@ server.post('/login', async (req, res) => {
       error: 'email format incorrect',
     });
   }
-  
+
   //Check if user exists
   const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
   try {
