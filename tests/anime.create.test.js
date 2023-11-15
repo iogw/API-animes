@@ -12,8 +12,7 @@ const NEW_ANIME = {
   year: 2002,
   chapters: 220,
 };
-const TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vZW1pQGdtYWlsLmNvbSIsImlhdCI6MTcwMDA0MDk3MCwiZXhwIjoxNzAwMDQ4MTcwfQ.xdHoXiCQeuQM9372z9xGjQZovptKS20mDgTtpCPDwoQ';
+const TOKEN = '';
 
 describe('API test to create new anime ', () => {
   test('Check if return is an success object', async () => {
