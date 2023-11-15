@@ -44,4 +44,9 @@ VALUES ("Anya Forger", 1, 2),
        ("Nine Beta", 3, 3);
 
 
-SELECT * FROM usuarios;
+CREATE TABLE users (
+iduser INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+name VARCHAR(50) NOT NULL,
+email VARCHAR(50) UNIQUE NOT NULL,
+password VARCHAR(100)
+);

@@ -6,6 +6,33 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
+//AUTENTICATION AND AUTHORITATION
+const generateToken = (payload) => {
+  const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '2h' });
+  return token;
+};
+
+const verifyToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    return decoded;
+  } catch (err) {
+    return null;
+  }
+};
+// Authoritation middleware
+const authenticateToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Token not provided' });
+  }
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  req.user = decoded;
+  next();
+};
 //CREATE & CONFIG SERVER
 const server = express();
 server.use(cors());
@@ -263,4 +290,48 @@ server.delete('/animes/:animeId', async (req, res) => {
       error: 'database error',
     });
   }
+});
+
+//Endpoint user registration
+/* Example
+  ​http://localhost:3113/signup/
+  {
+  "name": "Irene",
+  "email": "irene@gmail.com",
+  "password": "12345"
+} */
+server.post('/signup', async (req, res) => {
+  const { name, email, password } = req.body;
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  //check if email already exists
+  const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
+
+  const conn = await getConnection();
+  const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
+  // If already exists
+  if (user[0]) {
+    conn.end();
+    return res.json({
+      success: false,
+      error: 'Email already registered',
+    });
+  }
+  // If not: create token, add user to db and response ok+token
+  const queryAddUser = 'INSERT INTO users (name,email,password) VALUES (?,?,?)';
+
+  let infoForToken = {
+    name: name,
+    email: email,
+    passwordHash: passwordHash,
+  };
+  const token = generateToken(infoForToken);
+
+  const [newUser] = await conn.query(queryAddUser, [
+    name,
+    email,
+    passwordHash,
+  ]);
+  conn.end();
+  res.json({ success: true, token: token, id: newUser.insertId });
 });
