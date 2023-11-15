@@ -6,6 +6,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
 //AUTENTICATION AND AUTHORITATION
 const generateToken = (payload) => {
   const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '2h' });
@@ -37,6 +40,7 @@ const authenticateToken = (req, res, next) => {
 const server = express();
 server.use(cors());
 server.use(express.json());
+server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // SERVER PORT
 const serverPort = 3113;
@@ -416,6 +420,5 @@ server.post('/login', async (req, res) => {
     });
   }
 });
-
 
 module.exports = server;
