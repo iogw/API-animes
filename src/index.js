@@ -134,6 +134,44 @@ server.get('/animes', async (req, res) => {
   }
 });
 
+//Endpoint to list one anime
+server.get('/animes/:idAnime', async (req, res) => {
+  const paramsId = req.params.idAnime;
+  console.log(paramsId);
+  //input validation
+  if (isNaN(parseInt(paramsId))) {
+    return res.status(400).json({
+      success: false,
+      error: 'id must be a number',
+    });
+  }
+  const queryIdAnime = `SELECT * FROM animes WHERE idAnime = ?;`;
+
+  console.log('Querying database');
+  try {
+    const conn = await getConnection();
+    const [animes] = await conn.query(queryIdAnime, [paramsId]);
+    const anime = animes[0];
+    conn.end();
+    if (animes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'anime not found',
+      });
+    }
+    res.json({
+      success: true,
+      results: anime,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
+  }
+});
+
 //Endpoint to update an anime
 /* Example
   ​http://localhost:3113/animes/14
