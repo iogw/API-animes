@@ -18,15 +18,18 @@ La API cuenta con un sistema de registro y login para usuarios utilizando [**JSO
 
 Al tratarse de un proyecto backend (del lado del servidor), se ha desplegado en [**Render.com**](https://render.com/) y se ha empleado [**Swagger**](https://swagger.io/) para documentar la API.
 
+<details>
+<summary><strong>👇 Base de datos</strong></summary>
 
-### _Base de datos._
-**Contiene**:
+Contiene:
 - Una tabla de animes.
 - Una tabla Seiyuus (actores de voz japoneses).
 - Una tabla de personajes relacionadas con **foreign keys** a las tablas de anime y seiyuus.
+</details>
 
+<details>
+<summary><strong>👇 Endpoints</strong></summary>
 
-### _Endpoints._
 #### Principales:
 - `/animes` **(GET)**: Obtener el listado completo de animes.
 - `/animes/:id` **(GET)**: Obtener info detallada de un anime por su ID.
@@ -41,6 +44,7 @@ Al tratarse de un proyecto backend (del lado del servidor), se ha desplegado en 
 
 #### Swagger
 - `/api-docs/` Acceso a la interfaz de Swagger que permite interactuar con la API y utilizar sus funcionalidades sin necesidad de configuraciones adicionales.
+</details>
 
 ##
 
@@ -51,13 +55,23 @@ Al tratarse de un proyecto backend (del lado del servidor), se ha desplegado en 
 - Se obtiene un **token en la respuesta JSON** del endpoint `/signup` o `/login`. 
 - Es necesario añadir este token en los "headers" de la petición: `{"Authorization": "token"}`
 
+## Sin instalar nada, usando el despliegue en Render
+<details>
+<summary><strong>👇 Postman o Swagger</strong></summary>
+
 ### Postman
 Realiza peticiones con una herramienta tipo [Postman](https://www.postman.com/) a `https://anime-seiyuus.onrender.com/` seguido del endpoint correspondiente.
 
 ### Swagger
 Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` para utilizar la interfaz interactiva y realizar peticiones directamente desde allí.
+</details>
 
-## DIY
+
+## DIY - Uso de forma local
+
+<details>
+<summary><strong>👇 Pasos a seguir</strong></summary>
+
 > **NOTA:** Necesitas tener instalado [Node JS](https://nodejs.org/)
 
    1. Clonar el repositorio.
@@ -65,7 +79,7 @@ Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` par
    3. Crear una base de datos MySQL: `db/anime_seiyuus_db_querys.sql`
    4. Duplicar el archivo `.env_sample` y renombrar como `.env`.
    5. Rellenar `.env`:
-      - Con los datos del servidor (en local y/o remoto):
+      - Con los datos del servidor (local y/o remoto):
          - Se puede tener uno o ambos servidores configurados pero solo se puede usar uno.
        - `JWT_SECRET_KEY`: Clave segura para cifrar/descifrar las contraseñas de los usuarios.
        - Comentar los datos que no se vayan a usar según interese.
@@ -75,6 +89,7 @@ Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` par
      - **Swagger**: `http://localhost:3113/api-docs/`
      - [**Postman**](https://www.postman.com/) a la ruta `http://localhost:3113/` seguido del endpoint correspondiente.
 
+</details>
 
 ## Comentarios
 
@@ -87,6 +102,7 @@ En este ejercicio he podido practicar y asentar:
 - Manejar el servidor y la base de datos **subidas en la nube**.
 - Creación de tests unitarios con **JEST**.
 
+¡Gracias por pasarte!
 
 [Irene García Wodak](https://github.com/irenegwodak) 🖖
 
