@@ -83,7 +83,10 @@ Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` par
          - Se puede tener uno o ambos servidores configurados pero solo se puede usar uno.
        - `JWT_SECRET_KEY`: Clave segura para cifrar/descifrar las contraseñas de los usuarios.
        - Comentar los datos que no se vayan a usar según interese.
-   6. Arranca el proyecto con: `npm run dev`
+   6. Cambia en `swagger.json` el host:
+      - De: `"anime-seiyuus.onrender.com"` 
+      - A: `"localhost:3113"`
+   7. Arranca el proyecto con: `npm run dev`
 
    - Uso de la API:
      - **Swagger**: `http://localhost:3113/api-docs/`
