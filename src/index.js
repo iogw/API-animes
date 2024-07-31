@@ -10,14 +10,17 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 
 //AUTENTICATION AND AUTHORITATION
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const generateToken = (payload) => {
-  const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '2h' });
+  const token = jwt.sign(payload, JWT_SECRET_KEY, {
+    expiresIn: '2h',
+  });
   return token;
 };
 
 const verifyToken = (token) => {
   try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const decoded = jwt.verify(token, JWT_SECRET_KEY);
     return decoded;
   } catch (err) {
     return null;
@@ -240,7 +243,7 @@ server.put('/animes/:animeId', authenticateToken, async (req, res) => {
   }
 
   //Check if anime exists in db by id
-  console.log('Checking if anime existes');
+  console.log('Checking if anime exists');
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ${paramsId};`;
   const queryToModifyAnime =
@@ -332,7 +335,7 @@ server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   {
   "username": "Irene",
   "email": "irene@gmail.com",
-  "password": "12345"
+  "password": "12345678"
 } */
 server.post('/signup', async (req, res) => {
   const { username, email, password } = req.body;
@@ -388,7 +391,7 @@ server.post('/signup', async (req, res) => {
       passwordHash,
     ]);
     conn.end();
-    res.json({ success: true, token: token, id: newUser.insertId });
+    res.status(200).json({ success: true, token: token, id: newUser.insertId });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -433,7 +436,7 @@ server.post('/login', async (req, res) => {
     const userAndPassOk = !user
       ? false
       : await bcrypt.compare(password, user.password);
-    //If not exists or pass wrong
+    //If not exists or wrong pass
     if (!userAndPassOk) {
       return res
         .status(401)
