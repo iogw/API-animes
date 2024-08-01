@@ -16,6 +16,8 @@ Este proyecto es la construcción de una [**API**](https://es.wikipedia.org/wiki
 
 La API cuenta con un sistema de registro y login para usuarios utilizando [**JSON Web Token (JWT)**](https://jwt.io/). Al autenticarse correctamente, se genera un token de acceso que habilita las funcionalidades de añadir, editar y eliminar animes.
 
+Se utilizan consultas parametrizadas que evitan que se inserten o ejecuten comandos SQL maliciosos dentro de la consulta como protección contra la inyección de SQL.
+
 Al tratarse de un proyecto backend (del lado del servidor), se ha desplegado en [**Render.com**](https://render.com/) y se ha empleado [**Swagger**](https://swagger.io/) para documentar la API.
 
 <details>
