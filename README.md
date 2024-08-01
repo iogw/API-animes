@@ -55,6 +55,16 @@ Contiene:
 - Se obtiene un **token en la respuesta JSON** del endpoint `/signup` o `/login`. 
 - Es necesario añadir este token en los "headers" de la petición: `{"Authorization": "token"}`
 
+###  **A tener en cuenta**.
+
+Los 3 primeros animes de muestra **no se pueden editar/eliminar**. Puedes crear uno nuevo y manipularlo al gusto.
+
+Por seguridad existe un **número máximo de entradas** posibles en la base de datos. 
+  - Si intentas agregar nuevos datos y no puedes, prueba a borrar un anime existente.
+  - Si intentas registrar un usuario y no puedes, ponte en contacto conmigo o prueba con las siguientes credenciales. User: `irene@sample.com` Pass: `123456578`
+
+Si usas el proyecto en local puedes aumentar o eliminar estos límites en el código.
+
 ## Sin instalar nada, usando el despliegue en Render
 <details>
 <summary><strong>👇 Postman o Swagger</strong></summary>
@@ -63,7 +73,10 @@ Contiene:
 Realiza peticiones con una herramienta tipo [Postman](https://www.postman.com/) a `https://anime-seiyuus.onrender.com/` seguido del endpoint correspondiente.
 
 ### Swagger
-Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` para utilizar la interfaz interactiva y realizar peticiones directamente desde allí.
+Accede a la documentación en [`https://anime-seiyuus.onrender.com/api-docs/`](https://anime-seiyuus.onrender.com/api-docs/) para utilizar la interfaz interactiva y realizar peticiones directamente desde allí.
+
+>Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".
+
 </details>
 
 
@@ -89,7 +102,8 @@ Accede a la documentación en `https://anime-seiyuus.onrender.com/api-docs/` par
    7. Arranca el proyecto con: `npm run dev`
 
    - Uso de la API:
-     - **Swagger**: `http://localhost:3113/api-docs/`
+     - **Swagger**: [`http://localhost:3113/api-docs/`](http://localhost:3113/api-docs/)
+       - > Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".
      - [**Postman**](https://www.postman.com/) a la ruta `http://localhost:3113/` seguido del endpoint correspondiente.
 
 </details>
