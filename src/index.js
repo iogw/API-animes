@@ -1,4 +1,4 @@
-//IMPORT NPM REQUIRED
+// NPM MODULES
 const express = require('express');
 const app = express();
 app.use(express.json());
@@ -6,49 +6,17 @@ app.use(express.json());
 const cors = require('cors');
 app.use(cors());
 
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-require('dotenv').config();
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger/swagger.json');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-
+// LOCALE MODULES
 const { getDatabaseConnection } = require('./config/db');
+const { generateToken, authenticateToken } = require('./utils/tokenUtils');
 
 
-
-//AUTENTICATION AND AUTHORITATION
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-const generateToken = (payload) => {
-  const token = jwt.sign(payload, JWT_SECRET_KEY, {
-    expiresIn: '2h',
-  });
-  return token;
-};
-
-const verifyToken = (token) => {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET_KEY);
-    return decoded;
-  } catch (err) {
-    return null;
-  }
-};
-// Authoritation middleware
-const authenticateToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token) {
-    return res.status(401).json({ error: 'Token not provided' });
-  }
-  const decoded = verifyToken(token);
-  if (!decoded) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-  req.user = decoded;
-  next();
-};
 //CREATE & CONFIG SERVER
 
 // SERVER PORT
