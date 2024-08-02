@@ -1,13 +1,23 @@
 //IMPORT NPM REQUIRED
 const express = require('express');
+const app = express();
+app.use(express.json());
+
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+app.use(cors());
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger.json');
+const swaggerDocument = require('./swagger/swagger.json');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
+const { getDatabaseConnection } = require('./config/db');
+
+
 
 //AUTENTICATION AND AUTHORITATION
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
@@ -40,42 +50,25 @@ const authenticateToken = (req, res, next) => {
   next();
 };
 //CREATE & CONFIG SERVER
-const server = express();
-server.use(cors());
-server.use(express.json());
-server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // SERVER PORT
-const serverPort = 3113;
-server.listen(serverPort, () =>
-  console.log(`Server listening at http://localhost:${serverPort}`)
+const PORT = 3113;
+app.listen(PORT, () =>
+  console.log(`Server listening at http://localhost:${PORT}`)
 );
 
-async function getConnection() {
-  const connection = await mysql.createConnection({
-    host: process.env.HOST,
-    user: process.env.DBUSER,
-    password: process.env.PASS,
-    database: process.env.DATABASE,
-  });
-  await connection.connect();
-
-  console.log(
-    `Database connection established (identifier=${connection.threadId})`
-  );
-  return connection;
-}
+// async function getDatabaseConnection() {
 
 //to input year validations
 const maxYear = new Date().getFullYear() + 2;
 
 //Endpoint to list all animes
-server.get('/animes', async (req, res) => {
+app.get('/animes', async (req, res) => {
   const querySelectAllAnimes = 'SELECT * FROM animes';
 
   console.log('Querying database');
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     const [results] = await conn.query(querySelectAllAnimes);
 
     const numOfElements = results.length;
@@ -96,7 +89,7 @@ server.get('/animes', async (req, res) => {
 });
 
 //Endpoint to list one anime
-server.get('/animes/:idAnime', async (req, res) => {
+app.get('/animes/:idAnime', async (req, res) => {
   const paramsId = req.params.idAnime;
   console.log(paramsId);
   //input validation
@@ -110,7 +103,7 @@ server.get('/animes/:idAnime', async (req, res) => {
 
   console.log('Querying database');
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     const [animes] = await conn.query(queryIdAnime, [paramsId]);
     const anime = animes[0];
     conn.end();
@@ -134,7 +127,7 @@ server.get('/animes/:idAnime', async (req, res) => {
 });
 
 // Endpoint to insert data in animes table
-server.post('/animes', authenticateToken, async (req, res) => {
+app.post('/animes', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   // INPUT VALIDATION
@@ -172,7 +165,7 @@ server.post('/animes', authenticateToken, async (req, res) => {
 
   console.log('Sending data to database');
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
 
     // Check total animes in db
     const [[{ total_of_animes }]] = await conn.query(queryCountAllAnimes);
@@ -231,7 +224,7 @@ server.post('/animes', authenticateToken, async (req, res) => {
   "year": "2023",
   "chapters": "10"
 } */
-server.put('/animes/:animeId', authenticateToken, async (req, res) => {
+app.put('/animes/:animeId', authenticateToken, async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
 
@@ -275,7 +268,7 @@ server.put('/animes/:animeId', authenticateToken, async (req, res) => {
   const queryToModifyAnime =
     'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     // Get data to check if id/title exists and to send in response
     const [animesIdSearch] = await conn.query(queryIfIdExists, [paramsId]);
     //doesnt exist:
@@ -328,7 +321,7 @@ server.put('/animes/:animeId', authenticateToken, async (req, res) => {
 /* Example 
   ​http://localhost:3113/animes/14
 */
-server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
+app.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
   if (isNaN(parseInt(paramsId))) {
@@ -340,7 +333,7 @@ server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
     if (animes.length === 0) {
       conn.end();
@@ -374,7 +367,7 @@ server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   "email": "irene@sample.com",
   "password": "12345678"
 } */
-server.post('/signup', async (req, res) => {
+app.post('/signup', async (req, res) => {
   const { username, email, password } = req.body;
   //input validation
   if (!username || !email || !password) {
@@ -401,7 +394,7 @@ server.post('/signup', async (req, res) => {
   const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
 
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
     // If already exists
     if (user[0]) {
@@ -445,7 +438,7 @@ server.post('/signup', async (req, res) => {
   "email": "irene@sample.com",
   "password": "12345678"
 } */
-server.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -464,7 +457,7 @@ server.post('/login', async (req, res) => {
   //Check if user exists
   const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
   try {
-    const conn = await getConnection();
+    const conn = await getDatabaseConnection();
     const [users] = await conn.query(querySearchUser, [email]);
     conn.end();
 
@@ -499,4 +492,4 @@ server.post('/login', async (req, res) => {
   }
 });
 
-module.exports = server;
+module.exports = app;
