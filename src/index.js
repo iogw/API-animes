@@ -15,7 +15,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // LOCALE MODULES
 const { getDatabaseConnection } = require('./config/db');
 const { generateToken, authenticateToken } = require('./utils/tokenUtils');
+// const validate = require('./utils/validationUtils');
+const routes = require('./routes/animesRoutes');
 
+app.use('/', routes);
 
 //CREATE & CONFIG SERVER
 
@@ -25,54 +28,28 @@ app.listen(PORT, () =>
   console.log(`Server listening at http://localhost:${PORT}`)
 );
 
-// async function getDatabaseConnection() {
-
-//to input year validations
-const maxYear = new Date().getFullYear() + 2;
+// const maxYear = new Date().getFullYear() + 2;
 
 //Endpoint to list all animes
-app.get('/animes', async (req, res) => {
-  const querySelectAllAnimes = 'SELECT * FROM animes';
-
-  console.log('Querying database');
-  try {
-    const conn = await getDatabaseConnection();
-    const [results] = await conn.query(querySelectAllAnimes);
-
-    const numOfElements = results.length;
-
-    res.json({
-      success: true,
-      info: { count: numOfElements },
-      results: results,
-    });
-    conn.end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
-  }
-});
 
 //Endpoint to list one anime
-app.get('/animes/:idAnime', async (req, res) => {
-  const paramsId = req.params.idAnime;
-  console.log(paramsId);
-  //input validation
-  if (isNaN(parseInt(paramsId))) {
+app.get('/animes/:id', async (req, res) => {
+  const ID = req.params.id;
+
+  if (isNaN(parseInt(ID))) {
+    // if (!validate.id(ID)) {
     return res.status(400).json({
       success: false,
       error: 'id must be a number',
     });
   }
-  const queryIdAnime = `SELECT * FROM animes WHERE idAnime = ?;`;
+
+  const querySelectAnimeById = `SELECT * FROM animes WHERE idAnime = ?;`;
 
   console.log('Querying database');
   try {
     const conn = await getDatabaseConnection();
-    const [animes] = await conn.query(queryIdAnime, [paramsId]);
+    const [animes] = await conn.query(querySelectAnimeById, [ID]);
     const anime = animes[0];
     conn.end();
     if (animes.length === 0) {
