@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+// LOCALE MODULES
 const { getDatabaseConnection } = require('../config/db');
 const { generateToken, authenticateToken } = require('../utils/tokenUtils');
+const validate = require('../utils/validationUtils');
 
 const maxYear = new Date().getFullYear() + 2;
 
-router.get('/animes', async (req, res) => {
+router.get('/', async (req, res) => {
   const querySelectAllAnimes = 'SELECT * FROM animes';
 
   console.log('Querying database');
@@ -31,7 +33,7 @@ router.get('/animes', async (req, res) => {
   }
 });
 
-router.get('/animes/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   const ID = req.params.id;
 
   if (isNaN(parseInt(ID))) {
@@ -69,7 +71,7 @@ router.get('/animes/:id', async (req, res) => {
   }
 });
 
-router.post('/animes', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   // INPUT VALIDATION
@@ -165,7 +167,7 @@ router.post('/animes', authenticateToken, async (req, res) => {
   "year": "2023",
   "chapters": "10"
 } */
-router.put('/animes/:animeId', authenticateToken, async (req, res) => {
+router.put('/:animeId', authenticateToken, async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
 
@@ -261,7 +263,7 @@ router.put('/animes/:animeId', authenticateToken, async (req, res) => {
 /* Example 
   ​http://localhost:3113/animes/14
 */
-router.delete('/animes/:animeId', authenticateToken, async (req, res) => {
+router.delete('/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
   if (isNaN(parseInt(paramsId))) {
