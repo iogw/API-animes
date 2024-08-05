@@ -243,10 +243,17 @@ server.put('/animes/:animeId', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   //input validation
+
   if (isNaN(parseInt(paramsId))) {
     return res.status(400).json({
       success: false,
       error: 'id must be a number',
+    });
+  }
+  if ([1, 2, 3].includes(paramsId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'id 1, 2 or 3 cannot be modified',
     });
   }
   if (!title || !year || !chapters) {
@@ -342,6 +349,12 @@ server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
     return res.status(400).json({
       success: false,
       error: 'id must be a number',
+    });
+  }
+  if ([1, 2, 3].includes(paramsId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'id 1, 2 or 3 cannot be modified',
     });
   }
 
