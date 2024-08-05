@@ -133,7 +133,14 @@ server.get('/animes/:idAnime', async (req, res) => {
   }
 });
 
-// Endpoint to insert data in animes table
+// Endpoint to insert new anime
+/* Example
+  ​http://localhost:3113/animes/4
+  {
+  "title": "Kimetsu no yaiba",
+  "year": "2018",
+  "chapters": "105"
+} */
 server.post('/animes', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
@@ -326,7 +333,7 @@ server.put('/animes/:animeId', authenticateToken, async (req, res) => {
 
 //Endpoint to delete anime
 /* Example 
-  ​http://localhost:3113/animes/14
+  ​http://localhost:3113/animes/4
 */
 server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
@@ -370,8 +377,8 @@ server.delete('/animes/:animeId', authenticateToken, async (req, res) => {
 /* Example
   ​http://localhost:3113/signup/
   {
-  "username": "Irene",
-  "email": "irene@sample.com",
+  "username": "User",
+  "email": "user@sample.com",
   "password": "12345678"
 } */
 server.post('/signup', async (req, res) => {
@@ -442,7 +449,7 @@ server.post('/signup', async (req, res) => {
 /* Example
   ​http://localhost:3113/login/
   {
-  "email": "irene@sample.com",
+  "email": "user@sample.com",
   "password": "12345678"
 } */
 server.post('/login', async (req, res) => {
