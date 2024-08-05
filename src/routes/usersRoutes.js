@@ -5,6 +5,12 @@ const bcrypt = require('bcrypt');
 
 const db = require('../config/db');
 const tokenUtils = require('../utils/tokenUtils');
+const validateUserInput = require('../middlewares/usersInputValidation');
+
+// queries
+const queryFindUserByEmail = 'SELECT * FROM users WHERE email = ?;';
+const queryAddUser =
+  'INSERT INTO users (username,email,password) VALUES (?,?,?)';
 
 /* Example
   ​http://localhost:3113/signup/
@@ -13,31 +19,10 @@ const tokenUtils = require('../utils/tokenUtils');
   "email": "user@sample.com",
   "password": "12345678"
 } */
-router.post('/signup', async (req, res) => {
+router.post('/signup', validateUserInput.signup, async (req, res) => {
   const { username, email, password } = req.body;
-  //input validation
-  if (!username || !email || !password) {
-    return res.status(400).json({
-      success: false,
-      error: 'username, email and password are required fields',
-    });
-  }
-  if (!(email.includes('@') && email.includes('.'))) {
-    return res.status(400).json({
-      success: false,
-      error: 'email format incorrect',
-    });
-  }
-  if (password.length < 8) {
-    return res.status(400).json({
-      success: false,
-      error: 'password must be at least 8 characters long',
-    });
-  }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  //check if email already exists
-  const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
 
   try {
     const conn = await db.getConnection();
@@ -50,9 +35,6 @@ router.post('/signup', async (req, res) => {
         error: 'email already registered',
       });
     }
-    // If not: create token, add user to db and response ok+token
-    const queryAddUser =
-      'INSERT INTO users (username,email,password) VALUES (?,?,?)';
 
     let infoForToken = {
       username: username,
@@ -84,41 +66,29 @@ router.post('/signup', async (req, res) => {
     "email": "user@sample.com",
     "password": "12345678"
   } */
-router.post('/login', async (req, res) => {
+router.post('/login', validateUserInput.login, async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      error: 'email and password are required fields',
-    });
-  }
-  if (!(email.includes('@') && email.includes('.'))) {
-    return res.status(400).json({
-      success: false,
-      error: 'email format incorrect',
-    });
-  }
-
-  //Check if user exists
-  const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
+  const queryFindUserByEmail = 'SELECT * FROM users WHERE email = ?;';
   try {
     const conn = await db.getConnection();
-    const [users] = await conn.query(querySearchUser, [email]);
+    const [users] = await conn.query(queryFindUserByEmail, [email]);
     conn.end();
 
     const user = users[0];
-    //Check if user exists and pass is correct (bcrypt.compare)
-    const userAndPassOk = !user
+
+    //Check if email exists and pass is correct
+    const isUserAndPassOk = !user
       ? false
       : await bcrypt.compare(password, user.password);
-    //If not exists or wrong pass
-    if (!userAndPassOk) {
+
+    //If FALSE
+    if (!isUserAndPassOk) {
       return res
         .status(401)
         .json({ success: false, errorMessage: 'Invalid credentials' });
     }
-    //If exists
+    //If TRUE
     const infoForToken = {
       username: user.email,
       id: user.id,
