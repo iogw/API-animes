@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-// LOCALE MODULES
-const { getDatabaseConnection } = require('../config/db');
-const { generateToken, authenticateToken } = require('../utils/tokenUtils');
+const db = require('../config/db');
+const tokenUtils = require('../utils/tokenUtils');
 const validate = require('../utils/validationUtils');
+// const validateAnimeInput = require('../middlewares/animesInputValidation');
+
 
 const maxYear = new Date().getFullYear() + 2;
 
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
 
   console.log('Querying database');
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
     const [results] = await conn.query(querySelectAllAnimes);
 
     const numOfElements = results.length;
@@ -48,7 +49,7 @@ router.get('/:id', async (req, res) => {
 
   console.log('Querying database');
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
     const [animes] = await conn.query(querySelectAnimeById, [ID]);
     const anime = animes[0];
     conn.end();
@@ -78,7 +79,7 @@ router.get('/:id', async (req, res) => {
   "year": "2018",
   "chapters": "105"
 } */
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', tokenUtils.authenticate, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   // INPUT VALIDATION
@@ -116,7 +117,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
   console.log('Sending data to database');
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
 
     // Check total animes in db
     const [[{ total_of_animes }]] = await conn.query(queryCountAllAnimes);
@@ -174,7 +175,7 @@ router.post('/', authenticateToken, async (req, res) => {
   "year": "2023",
   "chapters": "10"
 } */
-router.put('/:animeId', authenticateToken, async (req, res) => {
+router.put('/:animeId', tokenUtils.authenticate, async (req, res) => {
   const paramsId = req.params.animeId;
   const { title, year, chapters } = req.body;
 
@@ -228,7 +229,7 @@ router.put('/:animeId', authenticateToken, async (req, res) => {
   const queryToModifyAnime =
     'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
     // Get data to check if id/title exists and to send in response
     const [animesIdSearch] = await conn.query(queryIfIdExists, [paramsId]);
     //doesnt exist:
@@ -280,7 +281,7 @@ router.put('/:animeId', authenticateToken, async (req, res) => {
 /* Example 
   ​http://localhost:3113/animes/4
 */
-router.delete('/:animeId', authenticateToken, async (req, res) => {
+router.delete('/:animeId', tokenUtils.authenticate, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
 
@@ -303,7 +304,7 @@ router.delete('/:animeId', authenticateToken, async (req, res) => {
 
   const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
     const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
     if (animes.length === 0) {
       conn.end();

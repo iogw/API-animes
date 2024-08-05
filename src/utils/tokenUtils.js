@@ -3,14 +3,14 @@ require('dotenv').config();
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
-const generateToken = (payload) => {
+const generate = (payload) => {
   const token = jwt.sign(payload, JWT_SECRET_KEY, {
     expiresIn: '2h',
   });
   return token;
 };
 
-const verifyToken = (token) => {
+const verify = (token) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET_KEY);
     return decoded;
@@ -19,12 +19,12 @@ const verifyToken = (token) => {
   }
 };
 
-const authenticateToken = (req, res, next) => {
+const authenticate = (req, res, next) => {
   const token = req.headers['authorization'];
   if (!token) {
     return res.status(401).json({ error: 'Token not provided' });
   }
-  const decoded = verifyToken(token);
+  const decoded = verify(token);
   if (!decoded) {
     return res.status(401).json({ error: 'Invalid token' });
   }
@@ -32,4 +32,4 @@ const authenticateToken = (req, res, next) => {
   next();
 };
 
-module.exports = { generateToken, verifyToken, authenticateToken };
+module.exports = { generate, verify, authenticate };

@@ -3,12 +3,8 @@ const router = express.Router();
 
 const bcrypt = require('bcrypt');
 
-const { getDatabaseConnection } = require('../config/db');
-const {
-  generateToken,
-  authenticateToken,
-  verifyToken,
-} = require('../utils/tokenUtils');
+const db = require('../config/db');
+const tokenUtils = require('../utils/tokenUtils');
 
 /* Example
   ​http://localhost:3113/signup/
@@ -44,10 +40,10 @@ router.post('/signup', async (req, res) => {
   const queryCheckIfEmailIsInDb = 'SELECT * FROM users WHERE email = ?;';
 
   try {
-    const conn = await getDatabaseConnection();
-    const [user] = await conn.query(queryCheckIfEmailIsInDb, [email]);
-    // If already exists
-    if (user[0]) {
+    const conn = await db.getConnection();
+    const [users] = await conn.query(queryFindUserByEmail, [email]);
+
+    if (users[0]) {
       conn.end();
       return res.json({
         success: false,
@@ -63,7 +59,7 @@ router.post('/signup', async (req, res) => {
       email: email,
       passwordHash: passwordHash,
     };
-    const token = generateToken(infoForToken);
+    const token = tokenUtils.generate(infoForToken);
 
     const [newUser] = await conn.query(queryAddUser, [
       username,
@@ -107,7 +103,7 @@ router.post('/login', async (req, res) => {
   //Check if user exists
   const querySearchUser = 'SELECT * FROM users WHERE email = ?;';
   try {
-    const conn = await getDatabaseConnection();
+    const conn = await db.getConnection();
     const [users] = await conn.query(querySearchUser, [email]);
     conn.end();
 

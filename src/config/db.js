@@ -2,7 +2,7 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 
-async function getDatabaseConnection() {
+async function getConnection() {
     const connection = await mysql.createConnection({
       host: process.env.HOST,
       user: process.env.DBUSER,
@@ -17,4 +17,4 @@ async function getDatabaseConnection() {
     return connection;
   }
 
-  module.exports = { getDatabaseConnection };
+  module.exports = { getConnection };
