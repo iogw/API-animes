@@ -98,7 +98,7 @@ server.get('/animes', async (req, res) => {
 //Endpoint to list one anime
 server.get('/animes/:idAnime', async (req, res) => {
   const paramsId = req.params.idAnime;
-  console.log(paramsId);
+
   //input validation
   if (isNaN(parseInt(paramsId))) {
     return res.status(400).json({
