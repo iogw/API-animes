@@ -71,6 +71,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/* Example
+  ​http://localhost:3113/animes
+  {
+  "title": "Kimetsu no yaiba",
+  "year": "2018",
+  "chapters": "105"
+} */
 router.post('/', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
@@ -172,12 +179,22 @@ router.put('/:animeId', authenticateToken, async (req, res) => {
   const { title, year, chapters } = req.body;
 
   //input validation
+
   if (isNaN(parseInt(paramsId))) {
     return res.status(400).json({
       success: false,
       error: 'id must be a number',
     });
   }
+
+  // 1, 2, 3 cannot be modified
+  if ([1, 2, 3].includes(paramsId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'id 1, 2 or 3 cannot be modified',
+    });
+  }
+
   if (!title || !year || !chapters) {
     return res.status(400).json({
       success: false,
@@ -261,15 +278,26 @@ router.put('/:animeId', authenticateToken, async (req, res) => {
 });
 
 /* Example 
-  ​http://localhost:3113/animes/14
+  ​http://localhost:3113/animes/4
 */
 router.delete('/:animeId', authenticateToken, async (req, res) => {
   console.log('Querying database');
   const paramsId = req.params.animeId;
+
+  // input validation
+
   if (isNaN(parseInt(paramsId))) {
     return res.status(400).json({
       success: false,
       error: 'id must be a number',
+    });
+  }
+
+  // 1, 2, 3 cannot be modified
+  if ([1, 2, 3].includes(paramsId)) {
+    return res.status(400).json({
+      success: false,
+      error: 'id 1, 2 or 3 cannot be modified',
     });
   }
 

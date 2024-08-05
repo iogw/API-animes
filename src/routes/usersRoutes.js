@@ -85,7 +85,7 @@ router.post('/signup', async (req, res) => {
 /* Example
     ​http://localhost:3113/login/
     {
-    "email": "irene@sample.com",
+    "email": "user@sample.com",
     "password": "12345678"
   } */
 router.post('/login', async (req, res) => {
