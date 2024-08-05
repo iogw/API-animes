@@ -14,11 +14,13 @@
 
 Este proyecto es la construcción de una [**API**](https://es.wikipedia.org/wiki/API) en [**NodeJs**](https://nodejs.org/en) y [**Express**](https://expressjs.com/es/) que se comunica con una base de datos [**MySQL**](https://www.mysql.com/).
 
-La API cuenta con un sistema de registro y login para usuarios utilizando [**JSON Web Token (JWT)**](https://jwt.io/). Al autenticarse correctamente, se genera un token de acceso que habilita las funcionalidades de añadir, editar y eliminar animes.
+La **base de datos** contiene tres tablas relacionadas entre sí: animes, personajes y dobladores.
 
-Se utilizan consultas parametrizadas que evitan que se inserten o ejecuten comandos SQL maliciosos dentro de la consulta como protección contra la inyección de SQL.
+La API consise en devolver el **listado completo** de animes registrados en formato JSON o el **detalle de un** anime según su ID. Cuenta con un sistema de **registro y login** para usuarios utilizando [**JSON Web Token (JWT)**](https://jwt.io/). Al autenticarse correctamente, se genera un token de acceso que habilita las funcionalidades de **añadir, editar y eliminar** animes.
 
-Al tratarse de un proyecto backend (del lado del servidor), se ha desplegado en [**Render.com**](https://render.com/) y se ha empleado [**Swagger**](https://swagger.io/) para documentar la API.
+Se utilizan consultas parametrizadas que **evitan un posible ataque** a la base de datos por inyección de código SQL.
+
+Al tratarse de un proyecto backend, se ha desplegado en [**Render.com**](https://render.com/) y se ha empleado [**Swagger**](https://swagger.io/) para documentar la API.
 
 <details>
 <summary><strong>👇 Base de datos</strong></summary>
@@ -59,7 +61,7 @@ Contiene:
 
 ###  **A tener en cuenta**.
 
-Los 3 primeros animes de muestra **no se pueden editar/eliminar**. Puedes crear uno nuevo y manipularlo al gusto.
+Los 3 primeros animes de muestra **no se pueden editar/eliminar**. Puedes crear uno nuevo y manejarlo al gusto.
 
 Por seguridad existe un **número máximo de entradas** posibles en la base de datos. 
   - Si intentas agregar nuevos datos y no puedes, prueba a borrar un anime existente.
@@ -96,8 +98,8 @@ Accede a la documentación en [`https://anime-seiyuus.onrender.com/api-docs/`](h
    5. Rellenar `.env`:
       - Con los datos del servidor (local y/o remoto):
          - Se puede tener uno o ambos servidores configurados pero solo se puede usar uno.
-       - `JWT_SECRET_KEY`: Clave segura para cifrar/descifrar las contraseñas de los usuarios.
-       - Comentar los datos que no se vayan a usar según interese.
+       - `JWT_SECRET_KEY`: Clave personal segura para cifrar/descifrar las contraseñas de los usuarios.
+       - Dejar como comentario los datos que no se vayan a usar según interese para evitar conflictos.
    6. Cambia en `swagger.json` el host:
       - De: `"anime-seiyuus.onrender.com"` 
       - A: `"localhost:3113"`
