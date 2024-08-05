@@ -32,4 +32,4 @@ const authenticateToken = (req, res, next) => {
   next();
 };
 
-module.exports = { generateToken, authenticateToken };
+module.exports = { generateToken, verifyToken, authenticateToken };
