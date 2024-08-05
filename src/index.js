@@ -46,9 +46,9 @@ server.use(express.json());
 server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // SERVER PORT
-const serverPort = 3113;
-server.listen(serverPort, () =>
-  console.log(`Server listening at http://localhost:${serverPort}`)
+const PORT = process.env.PORT || 3113;
+server.listen(PORT, () =>
+  console.log(`Server listening at http://localhost:${PORT}`)
 );
 
 async function getConnection() {
