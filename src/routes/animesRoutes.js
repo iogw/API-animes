@@ -150,18 +150,11 @@ router.put(
   '/:id',
   tokenUtils.authenticate,
   validateAnimeInput.id,
+  validateAnimeInput.immutableId,
   validateAnimeInput.data,
   async (req, res) => {
     const paramsId = req.params.id;
     const { title, year, chapters } = req.body;
-
-    // 1, 2, 3 cannot be modified
-    if ([1, 2, 3].includes(paramsId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'id 1, 2 or 3 cannot be modified',
-      });
-    }
 
     //Check if anime exists in db by id
     console.log('Checking if id exists');
@@ -228,16 +221,9 @@ router.delete(
   '/:id',
   tokenUtils.authenticate,
   validateAnimeInput.id,
+  validateAnimeInput.immutableId,
   async (req, res) => {
     const paramsId = req.params.id;
-
-    // 1, 2, 3 cannot be modified
-    if ([1, 2, 3].includes(paramsId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'id 1, 2 or 3 cannot be modified',
-      });
-    }
 
     const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
     try {
