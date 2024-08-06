@@ -149,8 +149,7 @@ router.post(
 router.put(
   '/:id',
   tokenUtils.authenticate,
-  validateAnimeInput.id,
-  validateAnimeInput.immutableId,
+  validateAnimeInput.idAndImmutable,
   validateAnimeInput.data,
   async (req, res) => {
     const paramsId = req.params.id;
@@ -221,7 +220,7 @@ router.delete(
   '/:id',
   tokenUtils.authenticate,
   validateAnimeInput.id,
-  validateAnimeInput.immutableId,
+  validateAnimeInput.idAndImmutable,
   async (req, res) => {
     const paramsId = req.params.id;
 

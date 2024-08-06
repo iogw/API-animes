@@ -5,14 +5,14 @@ const idSchema = Joi.object({
   id: Joi.number().integer().required(),
 });
 
-const immutableIds = [1, 2, 3, 16];
-const immutableIdSchema = Joi.object({
-  id: Joi.number()
-    .invalid(...immutableIds)
-    .messages({
-      'any.invalid': 'this id cannot be modified',
+const immutableIds = [1, 2, 3];
+const idAndImmutableSchema = idSchema.concat(
+  Joi.object({
+    id: Joi.invalid(...immutableIds).messages({
+      'any.invalid': 'This id cannot be modified.',
     }),
-});
+  })
+);
 
 const maxYear = new Date().getFullYear() + 2;
 const dataSchema = Joi.object({
@@ -24,8 +24,6 @@ const dataSchema = Joi.object({
 // Validate
 const validate = (schema, property) => {
   return (req, res, next) => {
-    console.log(req[property]);
-
     const { error } = schema.validate(req[property]);
     if (error) {
       return res.status(400).json({
@@ -38,11 +36,11 @@ const validate = (schema, property) => {
 };
 
 const id = validate(idSchema, 'params');
+const idAndImmutable = validate(idAndImmutableSchema, 'params');
 const data = validate(dataSchema, 'body');
-const immutableId = validate(immutableIdSchema, 'params');
 
 module.exports = {
   id,
   data,
-  immutableId,
+  idAndImmutable,
 };
