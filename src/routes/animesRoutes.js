@@ -146,108 +146,80 @@ router.post(
   "year": "2023",
   "chapters": "10"
 } */
-router.put('/:animeId', tokenUtils.authenticate, async (req, res) => {
-  const paramsId = req.params.animeId;
-  const { title, year, chapters } = req.body;
+router.put(
+  '/:id',
+  tokenUtils.authenticate,
+  validateAnimeInput.id,
+  validateAnimeInput.data,
+  async (req, res) => {
+    const paramsId = req.params.id;
+    const { title, year, chapters } = req.body;
 
-  //input validation
-
-  if (isNaN(parseInt(paramsId))) {
-    return res.status(400).json({
-      success: false,
-      error: 'id must be a number',
-    });
-  }
-
-  // 1, 2, 3 cannot be modified
-  if ([1, 2, 3].includes(paramsId)) {
-    return res.status(400).json({
-      success: false,
-      error: 'id 1, 2 or 3 cannot be modified',
-    });
-  }
-
-  if (!title || !year || !chapters) {
-    return res.status(400).json({
-      success: false,
-      error: 'title, year and chapters are required fields',
-    });
-  }
-  if (typeof title !== 'string') {
-    return res.status(400).json({
-      success: false,
-      error: 'title must be text',
-    });
-  }
-  if (isNaN(parseInt(year)) || isNaN(parseInt(chapters))) {
-    return res.status(400).json({
-      success: false,
-      error: 'year and chapters must be numbers',
-    });
-  }
-  if (!(1900 < parseInt(year) && parseInt(year) < maxYear)) {
-    return res.status(400).json({
-      success: false,
-      error: `year must be after 1900 and before ${maxYear}`,
-    });
-  }
-
-  //Check if anime exists in db by id
-  console.log('Checking if id exists');
-
-  const queryIfIdExists = `SELECT * FROM animes WHERE idAnime = ?;`;
-  const queryIfTitleExists = `SELECT * FROM animes WHERE title = ?;`;
-  const queryToModifyAnime =
-    'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
-  try {
-    const conn = await db.getConnection();
-    // Get data to check if id/title exists and to send in response
-    const [animesIdSearch] = await conn.query(queryIfIdExists, [paramsId]);
-    //doesnt exist:
-    if (animesIdSearch.length === 0) {
-      conn.end();
-      return res.status(404).json({
-        success: false,
-        error: 'anime not found',
-      });
-    }
-
-    const [animeTitleSearch] = await conn.query(queryIfTitleExists, [title]);
-    //doesnt exist:
-    if (animeTitleSearch.length !== 0) {
-      conn.end();
+    // 1, 2, 3 cannot be modified
+    if ([1, 2, 3].includes(paramsId)) {
       return res.status(400).json({
         success: false,
-        error: 'this title already exists',
+        error: 'id 1, 2 or 3 cannot be modified',
       });
     }
 
-    //Exists: send data to modify in db
-    console.log('Sending data to database');
-    const [modifyAnime] = await conn.query(queryToModifyAnime, [
-      title,
-      year,
-      chapters,
-      paramsId,
-    ]);
-    //Get new data to send in response
-    const [animesModified] = await conn.query(queryIfIdExists, [paramsId]);
-    conn.end();
+    //Check if anime exists in db by id
+    console.log('Checking if id exists');
 
-    res.status(200).json({
-      success: true,
-      msg: 'data modified successfully',
-      'previous data': animesIdSearch[0],
-      'new data': animesModified[0],
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
+    const queryIfIdExists = `SELECT * FROM animes WHERE idAnime = ?;`;
+    const queryIfTitleExists = `SELECT * FROM animes WHERE title = ?;`;
+    const queryToModifyAnime =
+      'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';
+    try {
+      const conn = await db.getConnection();
+      // Get data to check if id/title exists and to send in response
+      const [animesIdSearch] = await conn.query(queryIfIdExists, [paramsId]);
+      //doesnt exist:
+      if (animesIdSearch.length === 0) {
+        conn.end();
+        return res.status(404).json({
+          success: false,
+          error: `anime with ID ${paramsId} not found`,
+        });
+      }
+
+      const [animeTitleSearch] = await conn.query(queryIfTitleExists, [title]);
+      //doesnt exist:
+      if (animeTitleSearch.length !== 0) {
+        conn.end();
+        return res.status(400).json({
+          success: false,
+          error: 'this title already exists',
+        });
+      }
+
+      //Exists: send data to modify in db
+      console.log('Sending data to database');
+      const [modifyAnime] = await conn.query(queryToModifyAnime, [
+        title,
+        year,
+        chapters,
+        paramsId,
+      ]);
+      //Get new data to send in response
+      const [animesModified] = await conn.query(queryIfIdExists, [paramsId]);
+      conn.end();
+
+      res.status(200).json({
+        success: true,
+        msg: 'data modified successfully',
+        'previous data': animesIdSearch[0],
+        'new data': animesModified[0],
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        error: 'database error',
+      });
+    }
   }
-});
+);
 
 /* Example 
   ​http://localhost:3113/animes/4
