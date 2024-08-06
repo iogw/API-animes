@@ -224,53 +224,50 @@ router.put(
 /* Example 
   ​http://localhost:3113/animes/4
 */
-router.delete('/:animeId', tokenUtils.authenticate, async (req, res) => {
-  console.log('Querying database');
-  const paramsId = req.params.animeId;
+router.delete(
+  '/:id',
+  tokenUtils.authenticate,
+  validateAnimeInput.id,
+  async (req, res) => {
+    const paramsId = req.params.id;
 
-  // input validation
-
-  if (isNaN(parseInt(paramsId))) {
-    return res.status(400).json({
-      success: false,
-      error: 'id must be a number',
-    });
-  }
-
-  // 1, 2, 3 cannot be modified
-  if ([1, 2, 3].includes(paramsId)) {
-    return res.status(400).json({
-      success: false,
-      error: 'id 1, 2 or 3 cannot be modified',
-    });
-  }
-
-  const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
-  try {
-    const conn = await db.getConnection();
-    const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
-    if (animes.length === 0) {
-      conn.end();
-      return res.status(404).json({
+    // 1, 2, 3 cannot be modified
+    if ([1, 2, 3].includes(paramsId)) {
+      return res.status(400).json({
         success: false,
-        error: 'anime not found',
+        error: 'id 1, 2 or 3 cannot be modified',
       });
     }
-    const queryDeleteAnime = 'DELETE FROM animes WHERE idAnime = ?;';
-    const [animeDeleted] = await conn.query(queryDeleteAnime, [paramsId]);
-    conn.end();
 
-    res.status(200).json({
-      success: true,
-      msg: `anime "${animes[0].title}" deleted successfully`,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
+    const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
+    try {
+      const conn = await db.getConnection();
+      console.log('Querying database');
+      const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
+      if (animes.length === 0) {
+        conn.end();
+        return res.status(404).json({
+          success: false,
+          error: 'anime not found',
+        });
+      }
+
+      const queryDeleteAnime = 'DELETE FROM animes WHERE idAnime = ?;';
+      await conn.query(queryDeleteAnime, [paramsId]);
+      conn.end();
+
+      res.status(200).json({
+        success: true,
+        msg: `anime "${animes[0].title}" deleted successfully`,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        error: 'database error',
+      });
+    }
   }
-});
+);
 
 module.exports = router;
