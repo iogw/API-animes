@@ -3,9 +3,9 @@ const router = express.Router();
 
 const db = require('../config/db');
 const tokenUtils = require('../utils/tokenUtils');
-const validate = require('../utils/validationUtils');
+// const validate = require('../utils/validationUtils');
 // const validateAnimeInput = require('../middlewares/animesInputValidation');
-
+const validateAnimeInput = require('../middlewares/animesInputValidations');
 
 const maxYear = new Date().getFullYear() + 2;
 
@@ -34,16 +34,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateAnimeInput.validateId, async (req, res) => {
   const ID = req.params.id;
-
-  if (isNaN(parseInt(ID))) {
-    // if (!validate.id(ID)) {
-    return res.status(400).json({
-      success: false,
-      error: 'id must be a number',
-    });
-  }
 
   const querySelectAnimeById = `SELECT * FROM animes WHERE idAnime = ?;`;
 
