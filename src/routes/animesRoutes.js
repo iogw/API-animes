@@ -3,8 +3,6 @@ const router = express.Router();
 
 const db = require('../config/db');
 const tokenUtils = require('../utils/tokenUtils');
-// const validate = require('../utils/validationUtils');
-// const validateAnimeInput = require('../middlewares/animesInputValidation');
 const validateAnimeInput = require('../middlewares/animesInputValidations');
 
 const maxYear = new Date().getFullYear() + 2;
@@ -34,7 +32,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', validateAnimeInput.validateId, async (req, res) => {
+router.get('/:id', validateAnimeInput.id, async (req, res) => {
   const ID = req.params.id;
 
   const querySelectAnimeById = `SELECT * FROM animes WHERE idAnime = ?;`;
@@ -71,94 +69,75 @@ router.get('/:id', validateAnimeInput.validateId, async (req, res) => {
   "year": "2018",
   "chapters": "105"
 } */
-router.post('/', tokenUtils.authenticate, async (req, res) => {
-  const { title, year, chapters } = req.body;
+router.post(
+  '/',
+  tokenUtils.authenticate,
+  validateAnimeInput.data,
+  async (req, res) => {
+    const { title, year, chapters } = req.body;
 
-  // INPUT VALIDATION
+    const MAX_ANIME_COUNT = 8;
+    const queryGetTotalAmountAnimes =
+      'SELECT COUNT(*) AS total_of_animes FROM animes;';
+    const queryGetAnimeByTitle = 'SELECT * FROM animes WHERE title = ?';
+    const queryInsertAnime =
+      'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
 
-  if (!title || !year || !chapters) {
-    return res.status(400).json({
-      success: false,
-      error: 'title, year and chapters are required fields',
-    });
-  }
-  if (typeof title !== 'string') {
-    return res.status(400).json({
-      success: false,
-      error: 'title must be text',
-    });
-  }
-  if (isNaN(parseInt(year)) || isNaN(parseInt(chapters))) {
-    return res.status(400).json({
-      success: false,
-      error: 'year and chapters must be numbers',
-    });
-  }
-  if (!(1900 < parseInt(year) && parseInt(year) < maxYear)) {
-    return res.status(400).json({
-      success: false,
-      error: `year must be after 1900 and before ${maxYear}`,
-    });
-  }
+    console.log('Sending data to database');
+    try {
+      const conn = await db.getConnection();
 
-  const MAX_ANIME_COUNT = 11;
-  const queryCountAllAnimes = 'SELECT COUNT(*) AS total_of_animes FROM animes;';
-  const querySelectByTitle = 'SELECT * FROM animes WHERE title = ?';
-  const queryInsertAnime =
-    'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
+      // Check total animes in db
+      const [[{ total_of_animes }]] = await conn.query(
+        queryGetTotalAmountAnimes
+      );
 
-  console.log('Sending data to database');
-  try {
-    const conn = await db.getConnection();
+      if (total_of_animes >= MAX_ANIME_COUNT) {
+        conn.end();
+        console.log('Conection ended');
 
-    // Check total animes in db
-    const [[{ total_of_animes }]] = await conn.query(queryCountAllAnimes);
+        return res.status(400).json({
+          success: false,
+          error: 'The maximum number of anime to register has been reached',
+        });
+      }
 
-    if (total_of_animes >= MAX_ANIME_COUNT) {
+      // Check if title already exists
+      const [animeByTitle] = await conn.query(queryGetAnimeByTitle, [title]);
+      if (animeByTitle.length !== 0) {
+        conn.end();
+        console.log('Conection ended');
+
+        return res.status(400).json({
+          success: false,
+          error: 'This title already exists',
+        });
+      }
+
+      // Insert new data
+      const [resultAnime] = await conn.query(queryInsertAnime, [
+        title,
+        year,
+        chapters,
+      ]);
+
       conn.end();
       console.log('Conection ended');
 
-      return res.status(400).json({
+      return res.status(200).json({
+        success: true,
+        message: 'Anime created',
+        idNewAnime: resultAnime.insertId,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
         success: false,
-        error: 'The maximum number of anime to register has been reached',
+        error: 'database error',
       });
     }
-
-    // Check if title already exists
-    const [animeByTitle] = await conn.query(querySelectByTitle, [title]);
-    if (animeByTitle.length !== 0) {
-      conn.end();
-      console.log('Conection ended');
-
-      return res.status(400).json({
-        success: false,
-        error: 'This title already exists',
-      });
-    }
-
-    // Insert new data
-    const [resultAnime] = await conn.query(queryInsertAnime, [
-      title,
-      year,
-      chapters,
-    ]);
-
-    conn.end();
-    console.log('Conection ended');
-
-    return res.status(200).json({
-      success: true,
-      message: 'Anime created',
-      idNewAnime: resultAnime.insertId,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
   }
-});
+);
 
 /* Example
   ​http://localhost:3113/animes/4

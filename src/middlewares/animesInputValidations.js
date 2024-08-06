@@ -10,7 +10,7 @@ const idSchema = Joi.object({
 
 // Validación de los datos en la ruta POST y PUT
 const maxYear = new Date().getFullYear() + 2;
-const animeSchema = Joi.object({
+const dataSchema = Joi.object({
   title: Joi.string().required(),
   year: Joi.number().integer().min(1900).max(maxYear).required(),
   chapters: Joi.number().integer().required(),
@@ -25,7 +25,7 @@ const checkImmutableId = (id) => {
   return id;
 };
 
-const animeIdSchema = idSchema.custom(
+const inmutableIdSchema = idSchema.custom(
   checkImmutableId,
   'Check if id is immutable'
 );
@@ -36,8 +36,6 @@ const animeIdSchema = idSchema.custom(
 
 const validate = (schema, property) => {
   return (req, res, next) => {
-    console.log(req['params']['id']);
-
     const { error } = schema.validate(req[property]);
     if (error) {
       return res.status(400).json({
@@ -49,7 +47,7 @@ const validate = (schema, property) => {
   };
 };
 
-// const validateId = (req, res, next) => {
+// const id = (req, res, next) => {
 //   const { error } = idSchema.validate(req.params.id);
 //   if (error) {
 //     return res.status(400).json({
@@ -59,10 +57,10 @@ const validate = (schema, property) => {
 //   }
 //   next();
 // };
-const validateId = validate(idSchema, 'params');
+const id = validate(idSchema, 'params');
 
-// const validateAnime = (req, res, next) => {
-//   const { error } = animeSchema.validate(req.body);
+// const data = (req, res, next) => {
+//   const { error } = dataSchema.validate(req.body);
 //   if (error) {
 //     return res.status(400).json({
 //       success: false,
@@ -71,10 +69,10 @@ const validateId = validate(idSchema, 'params');
 //   }
 //   next();
 // };
-const validateAnime = validate(animeSchema, 'body');
+const data = validate(dataSchema, 'body');
 
-// const validateImmutableId = (req, res, next) => {
-//   const { error } = animeIdSchema.validate(req.params.id);
+// const immutableId = (req, res, next) => {
+//   const { error } = inmutableIdSchema.validate(req.params.id);
 //   if (error) {
 //     return res.status(400).json({
 //       success: false,
@@ -83,10 +81,10 @@ const validateAnime = validate(animeSchema, 'body');
 //   }
 //   next();
 // };
-const validateImmutableId = validate(animeIdSchema, 'params.id');
+const immutableId = validate(inmutableIdSchema, 'params.id');
 
 module.exports = {
-  validateId,
-  validateAnime,
-  validateImmutableId,
+  id,
+  data,
+  immutableId,
 };

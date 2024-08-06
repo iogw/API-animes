@@ -1,20 +1,19 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-
 async function getConnection() {
-    const connection = await mysql.createConnection({
-      host: process.env.HOST,
-      user: process.env.DBUSER,
-      password: process.env.PASS,
-      database: process.env.DATABASE,
-    });
-    await connection.connect();
-  
-    console.log(
-      `Database connection established (identifier=${connection.threadId})`
-    );
-    return connection;
-  }
+  const connection = await mysql.createConnection({
+    host: process.env.HOST,
+    user: process.env.DBUSER,
+    password: process.env.PASS,
+    database: process.env.DATABASE,
+  });
+  await connection.connect();
 
-  module.exports = { getConnection };
+  console.log(
+    `Database connection established (identifier=${connection.threadId})`
+  );
+  return connection;
+}
+
+module.exports = { getConnection };
