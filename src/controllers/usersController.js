@@ -1,13 +1,8 @@
+const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
-const db = require('../config/db');
-
 const tokenUtils = require('../utils/tokenUtils');
-
-// queries
-const queryFindUserByEmail = 'SELECT * FROM users WHERE email = ?;';
-const queryAddUser =
-  'INSERT INTO users (username,email,password) VALUES (?,?,?)';
+const query = require('../queries/usersQueries');
 
 const signup = async (req, res) => {
   const { username, email, password } = req.body;
@@ -16,7 +11,7 @@ const signup = async (req, res) => {
 
   try {
     const conn = await db.getConnection();
-    const [users] = await conn.query(queryFindUserByEmail, [email]);
+    const [users] = await conn.query(query.getUserByEmail, [email]);
 
     if (users[0]) {
       conn.end();
@@ -33,7 +28,7 @@ const signup = async (req, res) => {
     };
     const token = tokenUtils.generate(infoForToken);
 
-    const [newUser] = await conn.query(queryAddUser, [
+    const [newUser] = await conn.query(query.addUser, [
       username,
       email,
       passwordHash,
@@ -52,10 +47,9 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  const queryFindUserByEmail = 'SELECT * FROM users WHERE email = ?;';
   try {
     const conn = await db.getConnection();
-    const [users] = await conn.query(queryFindUserByEmail, [email]);
+    const [users] = await conn.query(query.getUserByEmail, [email]);
     conn.end();
 
     const user = users[0];
