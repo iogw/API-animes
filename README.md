@@ -2,17 +2,17 @@
 
 ## API: LISTADO DE ANIMES
 
-![API](https://img.shields.io/badge/API-orange?style=for-the-badge)
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)
-![Express.js](https://img.shields.io/badge/express-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
-![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
-![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
+[![API](https://img.shields.io/badge/API-orange?style=for-the-badge)](https://es.wikipedia.org/wiki/API)
+[![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/)
+[![Express.js](https://img.shields.io/badge/express-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)](https://expressjs.com/es/)
+[![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)](https://jwt.io/)
+[![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)](https://swagger.io/)
 
 </div>
 
-Este proyecto es la construcción de una [**API**](https://es.wikipedia.org/wiki/API) en [**NodeJs**](https://nodejs.org/en) y [**Express**](https://expressjs.com/es/) que se comunica con una base de datos [**MySQL**](https://www.mysql.com/).
+Este proyecto es la construcción de una [**API**](https://es.wikipedia.org/wiki/API) en [**NodeJs**](https://nodejs.org/) y [**Express**](https://expressjs.com/es/) que se comunica con una base de datos [**MySQL**](https://www.mysql.com/).
 
 La **base de datos** contiene tres tablas relacionadas entre sí: animes, personajes y dobladores.
 
@@ -25,26 +25,73 @@ Al tratarse de un proyecto backend, se ha desplegado en [**Render.com**](https:/
 <details>
 <summary><strong>👇 Base de datos</strong></summary>
 
-Contiene:
-- Una tabla de animes.
-- Una tabla Seiyuus (actores de voz japoneses).
-- Una tabla de personajes relacionadas con **foreign keys** a las tablas de anime y seiyuus.
+
+## Tablas:
+- Animes.
+- Seiyuus (actores de voz japoneses).
+- Personajes relacionadas con **foreign keys** a las tablas de anime y seiyuus.
+- Usuarios registrados.
+##
+
 </details>
 
 <details>
-<summary><strong>👇 Endpoints</strong></summary>
+<summary><strong>👇 Anime endpoints</strong></summary>
 
-#### Principales:
+##
 - `/animes` **(GET)**: Obtener el listado completo de animes.
 - `/animes/:id` **(GET)**: Obtener info detallada de un anime por su ID.
+  - Ejemplo: url/animes/2
 - `/animes` **(POST)**: Añadir un nuevo anime.
+  - ```json
+    Ejemplo:
+    {
+    "title": "Kimetsu no yaiba",
+    "year": "2018",
+    "chapters": "105"
+    }
+    ```
 - `/animes/:id` **(PUT)**: Editar información de un anime existente.
+  - Ejemplo: url/animes/15
+  - ```json
+    {
+    "title": "Kaze no Stigma",
+    "year": "2023",
+    "chapters": "10"
+    }
+    ```
 - `/animes/:id` **(DELETE)**: Eliminar un anime del listado.
+  - Ejemplo: url/animes/19
 
-#### Registro y Login - Autenticación de Usuarios con JWT:
+##
+
+</details>
+
+<details>
+<summary><strong>👇 Users endpoints</strong></summary>
+
+### Registro y Login - Autenticación de Usuarios con JWT:
 
 - `/signup` **(POST)**: Registro de nuevos usuarios.
+  - ```json
+    {
+    "username": "User",
+    "email": "user@sample.com",
+    "password": "12345678"
+    }
+    ```
 - `/login` **(POST)**: Inicio de sesión para obtener un token de acceso.
+  - ```json
+    {
+    "email": "user@sample.com",
+    "password": "12345678"
+    }
+    ```
+##
+</details>
+
+<details>
+<summary><strong>👇 Swagger endpoint</strong></summary>
 
 #### Swagger
 - `/api-docs/` Acceso a la interfaz de Swagger que permite interactuar con la API y utilizar sus funcionalidades sin necesidad de configuraciones adicionales.
@@ -79,7 +126,7 @@ Realiza peticiones con una herramienta tipo [Postman](https://www.postman.com/) 
 ### Swagger
 Accede a la documentación en [`https://anime-seiyuus.onrender.com/api-docs/`](https://anime-seiyuus.onrender.com/api-docs/) para utilizar la interfaz interactiva y realizar peticiones directamente desde allí.
 
->Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".
+> NOTA: Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".
 
 </details>
 
@@ -107,7 +154,7 @@ Accede a la documentación en [`https://anime-seiyuus.onrender.com/api-docs/`](h
 
    - Uso de la API:
      - **Swagger**: [`http://localhost:3113/api-docs/`](http://localhost:3113/api-docs/)
-       - > Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".
+       - `Si obtienes un error de CORS selecciona el esquema adecuado: "HTTPS" o "HTTP".`
      - [**Postman**](https://www.postman.com/) a la ruta `http://localhost:3113/` seguido del endpoint correspondiente.
 
 </details>
@@ -116,12 +163,30 @@ Accede a la documentación en [`https://anime-seiyuus.onrender.com/api-docs/`](h
 
 En este ejercicio he podido practicar y asentar:
 - La creación y configuración de una **base de datos SQL** y el uso de claves foráneas.
-- La creación y configuración de un **servidor**.
-- Creación y uso de una API con **varios endpoints**.
+- La creación y configuración de un **servidor en express**.
+- Creación y uso de una **API** con varios endpoints.
 - Manejo de registro y login con **creación de token** y **middleware** para **autenticar** un token.
 - Creación de la documentación del API con **Swagger**.
 - Manejar el servidor y la base de datos **subidas en la nube**.
 - Creación de tests unitarios con **JEST**.
+
+### Actualizaciones
+
+En un principio estaba todo el código en un solo archivo de 522 infumables líneas, así que me he puesto manos a la obra para modularizarlo. 
+
+De paso he revisado la documentación en Swagger y he pasado el aspirador, ordenando y renombrando para que sea más útil y fácil de entender.
+
+En este proceso me llevo:
+  - Más conocimiento sobre los middleware.
+  - La **librería Joi** para validación de datos.
+  - Rutas y controladores.
+  - **Router** de express.
+  - Nodemon es muy útil pero la info de los errores no tanto.
+  - No es tan rápido refactorizar como parece. 🙃
+  - Tener una visión global y trabajar por módulos ayuda a poner mejores nombres a las variables.
+
+
+##
 
 ¡Gracias por pasarte!
 

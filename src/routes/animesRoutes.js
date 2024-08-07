@@ -9,13 +9,6 @@ const animesController = require('../controllers/animesController');
 router.get('/', animesController.listAllAnimes);
 router.get('/:id', validateAnimeInput.id, animesController.listOneAnime);
 
-/* Example
-  ​http://localhost:3113/animes
-  {
-  "title": "Kimetsu no yaiba",
-  "year": "2018",
-  "chapters": "105"
-} */
 router.post(
   '/',
   authenticate,
@@ -23,13 +16,6 @@ router.post(
   animesController.addNewAnime
 );
 
-/* Example
-  ​http://localhost:3113/animes/4
-  {
-  "title": "Kaze no Stigma",
-  "year": "2023",
-  "chapters": "10"
-} */
 router.put(
   '/:id',
   authenticate,
@@ -38,9 +24,6 @@ router.put(
   animesController.updateAnime
 );
 
-/* Example 
-  ​http://localhost:3113/animes/4
-*/
 router.delete(
   '/:id',
   authenticate,
