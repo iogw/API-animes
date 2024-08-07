@@ -5,29 +5,9 @@ const db = require('../config/db');
 const { authenticate } = require('../middlewares/authMiddleware');
 const validateAnimeInput = require('../middlewares/animesInputValidations');
 
-router.get('/', async (req, res) => {
-  const querySelectAllAnimes = 'SELECT * FROM animes';
+const animesController = require('../controllers/animesController');
 
-  try {
-    const conn = await db.getConnection();
-    const [results] = await conn.query(querySelectAllAnimes);
-
-    const numOfElements = results.length;
-
-    res.json({
-      success: true,
-      info: { count: numOfElements },
-      results: results,
-    });
-    conn.end();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
-  }
-});
+router.get('/', animesController.listAllAnimes);
 
 router.get('/:id', validateAnimeInput.id, async (req, res) => {
   const ID = req.params.id;
