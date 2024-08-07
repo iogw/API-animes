@@ -93,7 +93,7 @@ router.post('/login', validateUserInput.login, async (req, res) => {
       username: user.email,
       id: user.id,
     };
-    const token = generateToken(infoForToken);
+    const token = tokenUtils.generate(infoForToken);
     return res.status(200).json({
       success: true,
       token,

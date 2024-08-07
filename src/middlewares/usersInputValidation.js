@@ -12,28 +12,7 @@ const signupSchema = baseUserSchema.keys({
 
 const loginSchema = baseUserSchema;
 
-// const signup = (req, res, next) => {
-//   const { error } = signupSchema.validate(req.body);
-//   if (error) {
-//     return res.status(400).json({
-//       success: false,
-//       error: error.details[0].message,
-//     });
-//   }
-//   next();
-// };
 const signup = validate(signupSchema, 'body');
-
-// const login = (req, res, next) => {
-//   const { error } = loginSchema.validate(req.body);
-//   if (error) {
-//     return res.status(400).json({
-//       success: false,
-//       error: error.details[0].message
-//     });
-//   }
-//   next();
-// };
 const login = validate(loginSchema, 'body');
 
 module.exports = { signup, login };
