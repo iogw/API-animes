@@ -2,15 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const db = require('../config/db');
-const tokenUtils = require('../utils/tokenUtils');
+const { authenticate } = require('../middlewares/authMiddleware');
 const validateAnimeInput = require('../middlewares/animesInputValidations');
-
-const maxYear = new Date().getFullYear() + 2;
 
 router.get('/', async (req, res) => {
   const querySelectAllAnimes = 'SELECT * FROM animes';
 
-  console.log('Querying database');
   try {
     const conn = await db.getConnection();
     const [results] = await conn.query(querySelectAllAnimes);
@@ -37,7 +34,6 @@ router.get('/:id', validateAnimeInput.id, async (req, res) => {
 
   const querySelectAnimeById = `SELECT * FROM animes WHERE idAnime = ?;`;
 
-  console.log('Querying database');
   try {
     const conn = await db.getConnection();
     const [animes] = await conn.query(querySelectAnimeById, [ID]);
@@ -69,75 +65,67 @@ router.get('/:id', validateAnimeInput.id, async (req, res) => {
   "year": "2018",
   "chapters": "105"
 } */
-router.post(
-  '/',
-  tokenUtils.authenticate,
-  validateAnimeInput.data,
-  async (req, res) => {
-    const { title, year, chapters } = req.body;
+router.post('/', authenticate, validateAnimeInput.data, async (req, res) => {
+  const { title, year, chapters } = req.body;
 
-    const MAX_ANIME_COUNT = 8;
-    const queryGetTotalAmountAnimes =
-      'SELECT COUNT(*) AS total_of_animes FROM animes;';
-    const queryGetAnimeByTitle = 'SELECT * FROM animes WHERE title = ?';
-    const queryInsertAnime =
-      'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
+  const MAX_ANIME_COUNT = 8;
+  const queryGetTotalAmountAnimes =
+    'SELECT COUNT(*) AS total_of_animes FROM animes;';
+  const queryGetAnimeByTitle = 'SELECT * FROM animes WHERE title = ?';
+  const queryInsertAnime =
+    'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
 
-    console.log('Sending data to database');
-    try {
-      const conn = await db.getConnection();
+  try {
+    const conn = await db.getConnection();
 
-      // Check total animes in db
-      const [[{ total_of_animes }]] = await conn.query(
-        queryGetTotalAmountAnimes
-      );
+    // Check total animes in db
+    const [[{ total_of_animes }]] = await conn.query(queryGetTotalAmountAnimes);
 
-      if (total_of_animes >= MAX_ANIME_COUNT) {
-        conn.end();
-        console.log('Conection ended');
-
-        return res.status(400).json({
-          success: false,
-          error: 'The maximum number of anime to register has been reached',
-        });
-      }
-
-      // Check if title already exists
-      const [animeByTitle] = await conn.query(queryGetAnimeByTitle, [title]);
-      if (animeByTitle.length !== 0) {
-        conn.end();
-        console.log('Conection ended');
-
-        return res.status(400).json({
-          success: false,
-          error: 'This title already exists',
-        });
-      }
-
-      // Insert new data
-      const [resultAnime] = await conn.query(queryInsertAnime, [
-        title,
-        year,
-        chapters,
-      ]);
-
+    if (total_of_animes >= MAX_ANIME_COUNT) {
       conn.end();
       console.log('Conection ended');
 
-      return res.status(200).json({
-        success: true,
-        message: 'Anime created',
-        idNewAnime: resultAnime.insertId,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        error: 'database error',
+        error: 'The maximum number of anime to register has been reached',
       });
     }
+
+    // Check if title already exists
+    const [animeByTitle] = await conn.query(queryGetAnimeByTitle, [title]);
+    if (animeByTitle.length !== 0) {
+      conn.end();
+      console.log('Conection ended');
+
+      return res.status(400).json({
+        success: false,
+        error: 'This title already exists',
+      });
+    }
+
+    // Insert new data
+    const [resultAnime] = await conn.query(queryInsertAnime, [
+      title,
+      year,
+      chapters,
+    ]);
+
+    conn.end();
+    console.log('Conection ended');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Anime created',
+      idNewAnime: resultAnime.insertId,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: 'database error',
+    });
   }
-);
+});
 
 /* Example
   ​http://localhost:3113/animes/4
@@ -148,7 +136,7 @@ router.post(
 } */
 router.put(
   '/:id',
-  tokenUtils.authenticate,
+  authenticate,
   validateAnimeInput.idAndImmutable,
   validateAnimeInput.data,
   async (req, res) => {
@@ -156,7 +144,6 @@ router.put(
     const { title, year, chapters } = req.body;
 
     //Check if anime exists in db by id
-    console.log('Checking if id exists');
 
     const queryIfIdExists = `SELECT * FROM animes WHERE idAnime = ?;`;
     const queryIfTitleExists = `SELECT * FROM animes WHERE title = ?;`;
@@ -186,7 +173,6 @@ router.put(
       }
 
       //Exists: send data to modify in db
-      console.log('Sending data to database');
       const [modifyAnime] = await conn.query(queryToModifyAnime, [
         title,
         year,
@@ -218,8 +204,7 @@ router.put(
 */
 router.delete(
   '/:id',
-  tokenUtils.authenticate,
-  validateAnimeInput.id,
+  authenticate,
   validateAnimeInput.idAndImmutable,
   async (req, res) => {
     const paramsId = req.params.id;
@@ -227,7 +212,6 @@ router.delete(
     const queryIfAnimeExists = `SELECT * FROM animes WHERE idAnime = ?;`;
     try {
       const conn = await db.getConnection();
-      console.log('Querying database');
       const [animes] = await conn.query(queryIfAnimeExists, [paramsId]);
       if (animes.length === 0) {
         conn.end();
