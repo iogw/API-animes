@@ -30,7 +30,7 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/Animes-GET"
+              "$ref": "#/definitions/list-all-animes-response"
             }
           },
           "500": {
@@ -62,13 +62,16 @@
             "description": "New anime data",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Animes-POST"
+              "$ref": "#/definitions/data-anime-request"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "successful operation"
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/anime-add-response"
+            }
           },
           "400": {
             "description": "invalid title/year/chapters supplied",
@@ -112,13 +115,13 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/AnimeID-GET"
+              "$ref": "#/definitions/list-one-anime-response"
             }
           },
           "400": {
             "description": "invalid ID supplied",
             "schema": {
-              "$ref": "#/definitions/error"
+              "$ref": "#/definitions/error-token"
             }
           },
           "404": {
@@ -163,7 +166,7 @@
             "description": "Info that needs to be update",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Animes-POST"
+              "$ref": "#/definitions/data-anime-request"
             }
           }
         ],
@@ -171,7 +174,7 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/AnimeID-PUT"
+              "$ref": "#/definitions/anime-update-response"
             }
           },
           "400": {
@@ -274,7 +277,7 @@
             "description": "Data user to sign up",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/User"
+              "$ref": "#/definitions/signup-request"
             }
           }
         ],
@@ -282,7 +285,7 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/UserSigned"
+              "$ref": "#/definitions/signup-response"
             }
           },
           "400": {
@@ -314,7 +317,7 @@
             "description": "Data to login",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Login"
+              "$ref": "#/definitions/login-request"
             }
           }
         ],
@@ -322,7 +325,7 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/UserLogged"
+              "$ref": "#/definitions/login-response"
             }
           },
           "400": {
@@ -342,7 +345,22 @@
     }
   },
   "definitions": {
-    "Animes-GET": {
+    "data-anime-request": {
+      "type": "object",
+      "required": ["title", "year", "chapters"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "chapters": {
+          "type": "integer"
+        }
+      }
+    },
+    "list-all-animes-response": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
@@ -376,24 +394,7 @@
         }
       }
     },
-
-    "Animes-POST": {
-      "type": "object",
-      "required": ["title", "year", "chapters"],
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "year": {
-          "type": "integer"
-        },
-        "chapters": {
-          "type": "integer"
-        }
-      }
-    },
-
-    "AnimeID-GET": {
+    "list-one-anime-response": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
@@ -417,8 +418,18 @@
         }
       }
     },
-
-    "AnimeID-PUT": {
+    "anime-add-response": {
+      "type": "object",
+      "properties": {
+        "success": { "type": "boolean" },
+        "msg": { "type": "string" },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "anime-update-response": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
@@ -461,8 +472,7 @@
         }
       }
     },
-
-    "User": {
+    "signup-request": {
       "type": "object",
       "required": ["username", "email", "password"],
       "properties": {
@@ -477,7 +487,15 @@
         }
       }
     },
-    "Login": {
+    "signup-response": {
+      "type": "object",
+      "properties": {
+        "success": { "type": "boolean" },
+        "token": { "type": "string" },
+        "id": { "type": "number" }
+      }
+    },
+    "login-request": {
       "type": "object",
       "required": ["username", "password"],
       "properties": {
@@ -489,15 +507,7 @@
         }
       }
     },
-    "UserSigned": {
-      "type": "object",
-      "properties": {
-        "success": { "type": "boolean" },
-        "token": { "type": "string" },
-        "id": { "type": "number" }
-      }
-    },
-    "UserLogged": {
+    "login-response": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
