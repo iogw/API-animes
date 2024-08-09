@@ -1,7 +1,14 @@
 const db = require('../config/db');
 const query = require('../queries/animesQueries');
+const ApiResponse = require('../utils/apiResponse');
 
 // responses
+
+// const esquemaRespuesta = {
+//   value: {},
+//   errors: [],
+//   success: boolean,
+// };
 
 const notFoundResponse = (res) => {
   return res.status(404).json({
@@ -40,6 +47,7 @@ const listAllAnimes = async (req, res) => {
 
 const listOneAnime = async (req, res) => {
   const ID = req.params.id;
+  const apiResponse = new ApiResponse(res);
   let dbConn;
 
   try {
@@ -49,6 +57,7 @@ const listOneAnime = async (req, res) => {
 
     // Check if anime exists
     if (!anime) {
+      return apiResponse.notFound('Anime not found');
       return notFoundResponse(res);
     }
 

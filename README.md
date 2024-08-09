@@ -174,6 +174,8 @@ En este ejercicio he podido practicar y asentar:
 
 En un principio estaba todo el código en un solo archivo de 522 infumables líneas, así que me he puesto manos a la obra para modularizarlo. 
 
+También he unificado las respuestas de la api, una manera más limpia y coherente de trabajar, usando **clases** de Javascript.
+
 De paso he revisado la documentación en Swagger y he pasado el aspirador, ordenando y renombrando para que sea más útil y fácil de entender.
 
 En este proceso me llevo:
