@@ -7,7 +7,7 @@ class ApiResponseTwo {
   responseBuilder(code, success, msg) {
     return this.res.status(code).json({
       success: success,
-      msg: msg,
+      message: msg,
       data: this.data,
       error: this.error,
     });
@@ -18,22 +18,28 @@ class ApiResponseTwo {
     const msg = 'Request made successfully';
     return this.responseBuilder(code, success, msg);
   }
-  created(){
+  created() {
     const code = 201;
     const success = true;
     const msg = 'Resource created successfully';
     return this.responseBuilder(code, success, msg);
   }
-  dbError(){
-    const code = 500;
+  badRequest() {
+    const code = 400;
     const success = false;
-    const msg = 'Database error';
+    const msg = 'Bad request';
     return this.responseBuilder(code, success, msg);
   }
-  error(){
+  notFound() {
+    const code = 404;
+    const success = false;
+    const msg = 'Resource not found';
+    return this.responseBuilder(code, success, msg);
+  }
+  internalServerError() {
     const code = 500;
     const success = false;
-    const msg = 'Database error';
+    const msg = 'Internal server error';
     return this.responseBuilder(code, success, msg);
   }
 

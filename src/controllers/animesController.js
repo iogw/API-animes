@@ -17,14 +17,8 @@ const notFoundResponse = (res) => {
     error: 'anime not found',
   });
 };
-const dbErrorResponse = (res) => {
-  return res.status(500).json({
-    success: false,
-    error: 'database error',
-  });
-};
 
-function jsonRes(res, method, { data = undefined, error = undefined }) {
+function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
   const jsonRes = new ApiResponseTwo(res, data, error);
 
   if (typeof jsonRes[method] === 'function') {
@@ -32,6 +26,34 @@ function jsonRes(res, method, { data = undefined, error = undefined }) {
   } else {
     return console.log('CHECK CONTROLLER: METHOD NAME');
   }
+}
+
+function personalizedRes(name, res, error = null) {
+  if ((name = 'dbError'))
+    return jsonRes(res, 'internalServerError', { error: error });
+
+  if ((name = 'maxReached'))
+    return jsonRes(res, 'badRequest', {
+      error: 'No more registrations allowed',
+    });
+
+  if ((name = 'titleAlreadyExists'))
+    return jsonRes(res, 'badRequest', {
+      error: 'This title already exists',
+    });
+}
+
+// function dbError(res, error) {
+//   return jsonRes(res, 'internalServerError', { error: error });
+// }
+// function titleAlreadyExists(res) {
+//   return jsonRes(res, 'badRequest', {
+//     error: 'This title already exists',
+//   });
+// }
+function endDbConn(dbConn) {
+  if (dbConn) dbConn.end();
+  console.log('Database connection ended');
 }
 
 // endpoints
@@ -48,16 +70,14 @@ const listAll = async (req, res) => {
     return jsonRes(res, 'ok', { data: data });
   } catch (error) {
     console.error(error);
-    return jsonRes(res, 'dbError', { error: error.errno });
+    return dbError(res, error.errno);
   } finally {
-    if (dbConn) dbConn.end();
-    console.log('Database connection ended');
+    endDbConn(dbConn);
   }
 };
 
 const listOne = async (req, res) => {
   const ID = req.params.id;
-  const apiResponse = new ApiResponse(res);
   let dbConn;
 
   try {
@@ -65,70 +85,44 @@ const listOne = async (req, res) => {
     const [animes] = await dbConn.query(query.getById, [ID]);
     const anime = animes[0];
 
-    // Check if anime exists
-    if (!anime) {
-      return apiResponse.notFound('Anime not found');
-      return notFoundResponse(res);
-    }
+    if (!anime) return jsonRes(res, 'notFound');
 
-    // List anime
-    return res.status(200).json({
-      success: true,
-      results: anime,
-    });
+    return jsonRes(res, 'ok', { data: anime });
   } catch (error) {
     console.error(error);
-    return dbErrorResponse(res);
+    return dbError(res, error.errno);
   } finally {
-    if (dbConn) dbConn.end();
-    console.log('Database connection ended');
+    endDbConn(dbConn);
   }
 };
 
 const addNew = async (req, res) => {
-  const MAX_ANIME_COUNT = 8;
+  const MAX_ANIME_COUNT = 15;
   const { title, year, chapters } = req.body;
   let dbConn;
 
   try {
     const dbConn = await db.getConnection();
+    // Checks
     const [[{ total_of_animes }]] = await dbConn.query(query.getTotalCount);
-
-    // Check if reached max animes
-    if (total_of_animes >= MAX_ANIME_COUNT) {
-      return res.status(400).json({
-        success: false,
-        error: 'The maximum number of anime to register has been reached',
-      });
-    }
-
-    // Check if title already exists
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
-    if (animeByTitle[0]) {
-      return res.status(400).json({
-        success: false,
-        error: 'This title already exists',
-      });
-    }
+
+    if (total_of_animes >= MAX_ANIME_COUNT)
+      return personalizedRes(res, 'maxReached');
+    // return jsonRes(res, 'badRequest', {
+    //   error: 'The number of registrations has been reached',
+    // });
+    if (animeByTitle[0]) return personalizedRes(res, 'titleAlreadyExists');
 
     // Insert new data
-    const [dbResponseWhenAdd] = await dbConn.query(query.add, [
-      title,
-      year,
-      chapters,
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      msg: 'Anime created',
-      id: dbResponseWhenAdd.insertId,
-    });
+    const [addedRes] = await dbConn.query(query.add, [title, year, chapters]);
+    const data = { id: addedRes.insertId };
+    return jsonRes(res, 'created', { data: data });
   } catch (error) {
     console.error(error);
-    return dbErrorResponse(res);
+    return dbError(res, error.errno);
   } finally {
-    if (dbConn) dbConn.end();
-    console.log('Database connection ended');
+    endDbConn(dbConn);
   }
 };
 
@@ -141,21 +135,15 @@ const updateAni = async (req, res) => {
   try {
     const dbConn = await db.getConnection();
 
-    // Check if anime exists
+    // Get data if anime exists
     const [animeDataOri] = await dbConn.query(query.getById, [paramsId]);
-    if (!animeDataOri[0]) {
-      return notFoundResponse(res);
-    }
+    if (!animeDataOri[0]) return jsonRes(res, 'notFound');
 
     // Check if title already exists (excluding the current anime)
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
 
-    if (animeByTitle[0] && animeByTitle[0].idAnime !== parseInt(paramsId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'this title already exists',
-      });
-    }
+    if (animeByTitle[0] && animeByTitle[0].idAnime !== parseInt(paramsId))
+      return titleAlreadyExists(res);
 
     // Update
     await dbConn.query(query.update, [title, year, chapters, paramsId]);
@@ -169,10 +157,9 @@ const updateAni = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return dbErrorResponse(res);
+    return dbError(res, error.errno);
   } finally {
-    if (dbConn) dbConn.end();
-    console.log('Database connection ended');
+    endDbConn(dbConn);
   }
 };
 
@@ -197,10 +184,9 @@ const deleteAni = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return dbErrorResponse(res);
+    return dbError(res, error.errno);
   } finally {
-    if (dbConn) dbConn.end();
-    console.log('Database connection ended');
+    endDbConn(dbConn);
   }
 };
 
