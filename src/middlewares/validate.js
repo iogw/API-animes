@@ -1,4 +1,4 @@
-const jsonRes = require('../utils/apiResponse');
+const { jsonRes } = require('../utils/apiResponse');
 
 const validate = (schema, property) => {
   return (req, res, next) => {
