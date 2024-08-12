@@ -2,33 +2,33 @@ const express = require('express');
 const router = express.Router();
 
 const { authenticate } = require('../middlewares/authMiddleware');
-const validateAnimeInput = require('../middlewares/animesInputValidations');
+const validate = require('../middlewares/animesInputValidations');
 
-const animesController = require('../controllers/animesController');
+const controller = require('../controllers/animesController');
 
-router.get('/', animesController.listAllAnimes);
-router.get('/:id', validateAnimeInput.id, animesController.listOneAnime);
+router.get('/', controller.listAll);
+router.get('/:id', validate.id, controller.listOne);
 
 router.post(
   '/',
   authenticate,
-  validateAnimeInput.data,
-  animesController.addNewAnime
+  validate.data,
+  controller.addNew
 );
 
 router.put(
   '/:id',
   authenticate,
-  validateAnimeInput.idAndImmutable,
-  validateAnimeInput.data,
-  animesController.updateAnime
+  validate.idAndImmutable,
+  validate.data,
+  controller.updateAni
 );
 
 router.delete(
   '/:id',
   authenticate,
-  validateAnimeInput.idAndImmutable,
-  animesController.deleteAnime
+  validate.idAndImmutable,
+  controller.deleteAni
 );
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const query = require('../queries/animesQueries');
 const ApiResponse = require('../utils/apiResponse');
+const ApiResponseTwo = require('../utils/apiResponseTwo');
 
 // responses
 
@@ -23,29 +24,38 @@ const dbErrorResponse = (res) => {
   });
 };
 
+function jsonRes(res, method, { data = undefined, error = undefined }) {
+  const jsonRes = new ApiResponseTwo(res, data, error);
+
+  if (typeof jsonRes[method] === 'function') {
+    return jsonRes[method]();
+  } else {
+    return console.log('CHECK CONTROLLER: METHOD NAME');
+  }
+}
+
 // endpoints
-const listAllAnimes = async (req, res) => {
+const listAll = async (req, res) => {
   let dbConn;
   try {
     const dbConn = await db.getConnection();
     const [results] = await dbConn.query(query.getAll);
-    const count = results.length;
 
-    return res.status(200).json({
-      success: true,
-      info: { count: count },
+    let data = {
+      count: results.length,
       results: results,
-    });
+    };
+    return jsonRes(res, 'ok', { data: data });
   } catch (error) {
     console.error(error);
-    return dbErrorResponse(res);
+    return jsonRes(res, 'dbError', { error: error.errno });
   } finally {
     if (dbConn) dbConn.end();
     console.log('Database connection ended');
   }
 };
 
-const listOneAnime = async (req, res) => {
+const listOne = async (req, res) => {
   const ID = req.params.id;
   const apiResponse = new ApiResponse(res);
   let dbConn;
@@ -75,7 +85,7 @@ const listOneAnime = async (req, res) => {
   }
 };
 
-const addNewAnime = async (req, res) => {
+const addNew = async (req, res) => {
   const MAX_ANIME_COUNT = 8;
   const { title, year, chapters } = req.body;
   let dbConn;
@@ -122,7 +132,7 @@ const addNewAnime = async (req, res) => {
   }
 };
 
-const updateAnime = async (req, res) => {
+const updateAni = async (req, res) => {
   const paramsId = req.params.id;
   const { title, year, chapters } = req.body;
 
@@ -166,7 +176,7 @@ const updateAnime = async (req, res) => {
   }
 };
 
-const deleteAnime = async (req, res) => {
+const deleteAni = async (req, res) => {
   const paramsId = req.params.id;
   let dbConn;
 
@@ -195,9 +205,9 @@ const deleteAnime = async (req, res) => {
 };
 
 module.exports = {
-  listAllAnimes,
-  listOneAnime,
-  addNewAnime,
-  updateAnime,
-  deleteAnime,
+  listAll,
+  listOne,
+  addNew,
+  updateAni,
+  deleteAni,
 };
