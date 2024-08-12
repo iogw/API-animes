@@ -1,11 +1,9 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
-const tokenUtils = require('../utils/tokenUtils');
 const query = require('../queries/usersQueries');
-
-const jsonRes = require('../utils/apiResponse');
-const errorMsgEmailRegistered = 'This email is already registered';
+const tokenUtils = require('../utils/tokenUtils');
+const { jsonRes, MSG } = require('../utils/apiResponse');
 
 const signup = async (req, res) => {
   const { username, email, password } = req.body;
@@ -17,7 +15,7 @@ const signup = async (req, res) => {
     const [users] = await conn.query(query.getUserByEmail, [email]);
 
     if (users[0]) {
-      return jsonRes(res, 'badRequest', { error: errorMsgEmailRegistered });
+      return jsonRes(res, 'badRequest', { error: MSG.ALREADY_REGISTERED });
       // return res.json({
       //   success: false,
       //   error: 'email already registered',
