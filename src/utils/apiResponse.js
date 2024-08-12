@@ -30,6 +30,12 @@ class ApiResponse {
     const msg = 'Bad request';
     return this.responseBuilder(code, success, msg);
   }
+  401() {
+    const code = 401;
+    const success = false;
+    const msg = 'Unauthorized';
+    return this.responseBuilder(code, success, msg);
+  }
   notFound() {
     const code = 404;
     const success = false;
@@ -54,4 +60,4 @@ function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
   }
 }
 
-module.exports =  jsonRes ;
+module.exports = jsonRes;
