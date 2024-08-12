@@ -1,5 +1,6 @@
-const getUserByEmail = 'SELECT * FROM users WHERE email = ?;';
-const addUser =
-  'INSERT INTO users (username,email,password) VALUES (?,?,?)';
+const getTotalCount = 'SELECT COUNT(*) AS db_count FROM users;';
 
-module.exports = { getUserByEmail, addUser };
+const getUserByEmail = 'SELECT * FROM users WHERE email = ?;';
+const addUser = 'INSERT INTO users (username,email,password) VALUES (?,?,?)';
+
+module.exports = { getTotalCount, getUserByEmail, addUser };
