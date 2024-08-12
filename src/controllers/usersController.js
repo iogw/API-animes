@@ -4,21 +4,24 @@ const bcrypt = require('bcrypt');
 const tokenUtils = require('../utils/tokenUtils');
 const query = require('../queries/usersQueries');
 
+const jsonRes = require('../utils/apiResponse');
+const errorMsgEmailRegistered = 'This email is already registered';
+
 const signup = async (req, res) => {
   const { username, email, password } = req.body;
-
   const passwordHash = await bcrypt.hash(password, 10);
+  let dbConn;
 
   try {
-    const conn = await db.getConnection();
+    dbConn = await db.getConnection();
     const [users] = await conn.query(query.getUserByEmail, [email]);
 
     if (users[0]) {
-      conn.end();
-      return res.json({
-        success: false,
-        error: 'email already registered',
-      });
+      return jsonRes(res, 'badRequest', { error: errorMsgEmailRegistered });
+      // return res.json({
+      //   success: false,
+      //   error: 'email already registered',
+      // });
     }
 
     let infoForToken = {
@@ -28,30 +31,31 @@ const signup = async (req, res) => {
     };
     const token = tokenUtils.generate(infoForToken);
 
-    const [newUser] = await conn.query(query.addUser, [
+    const [newUser] = await dbConn.query(query.addUser, [
       username,
       email,
       passwordHash,
     ]);
-    conn.end();
-    res.status(200).json({ success: true, token: token, id: newUser.insertId });
+
+    const data = { token: token, id: newUser.insertId };
+
+    return jsonRes(res, 'ok', { data: data });
+    // res.status(200).json({ success: true, token: token, id: newUser.insertId });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
+    return jsonRes(res, 'internalServerError', { error: error.errno });
+  } finally {
+    db.endConnection(dbConn);
   }
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  let dbConn;
 
   try {
-    const conn = await db.getConnection();
+    dbConn = await db.getConnection();
     const [users] = await conn.query(query.getUserByEmail, [email]);
-    conn.end();
-
     const user = users[0];
 
     //Check if email exists and pass is correct
@@ -61,9 +65,10 @@ const login = async (req, res) => {
 
     //If FALSE
     if (!isUserAndPassOk) {
-      return res
-        .status(401)
-        .json({ success: false, errorMessage: 'Invalid credentials' });
+      return jsonRes(res, '401');
+      //   return res
+      //     .status(401)
+      //     .json({ success: false, errorMessage: 'Invalid credentials' });
     }
     //If TRUE
     const infoForToken = {
@@ -71,17 +76,18 @@ const login = async (req, res) => {
       id: user.id,
     };
     const token = tokenUtils.generate(infoForToken);
-    return res.status(200).json({
-      success: true,
-      token,
-      username: user.username,
-    });
+    const data = { token: token, username: user.username };
+    return jsonRes(res, 'ok', { data: data });
+    // return res.status(200).json({
+    //   success: true,
+    //   token,
+    //   username: user.username,
+    // });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      error: 'database error',
-    });
+    return jsonRes(res, 'internalServerError', { error: error.errno });
+  } finally {
+    db.endConnection(dbConn);
   }
 };
 
