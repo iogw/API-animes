@@ -63,6 +63,7 @@ const MSG = {
   MAX_REACHED: 'No more registrations allowed',
   TITLE_REPEATED: 'This title already exists',
   ALREADY_REGISTERED: 'This email is already registered',
+  INVALID_CREDENTIALS: 'Invalid credentials',
 };
 
 module.exports = { jsonRes, MSG };

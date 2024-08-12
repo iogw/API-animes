@@ -6,39 +6,38 @@ const tokenUtils = require('../utils/tokenUtils');
 const { jsonRes, MSG } = require('../utils/apiResponse');
 
 const signup = async (req, res) => {
+  const MAX_COUNT = 10;
   const { username, email, password } = req.body;
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHashed = await bcrypt.hash(password, 10);
+  let infoForToken = {
+    username: username,
+    email: email,
+    passwordHash: passwordHashed,
+  };
+  const token = tokenUtils.generate(infoForToken);
   let dbConn;
 
   try {
     dbConn = await db.getConnection();
-    const [users] = await conn.query(query.getUserByEmail, [email]);
 
-    if (users[0]) {
+    // Checks
+    const [[{ db_count }]] = await dbConn.query(query.getTotalCount);
+    const [users] = await dbConn.query(query.getUserByEmail, [email]);
+
+    if (db_count >= MAX_COUNT)
+      return jsonRes(res, 'badRequest', { error: MSG.MAX_REACHED });
+    if (users[0])
       return jsonRes(res, 'badRequest', { error: MSG.ALREADY_REGISTERED });
-      // return res.json({
-      //   success: false,
-      //   error: 'email already registered',
-      // });
-    }
 
-    let infoForToken = {
-      username: username,
-      email: email,
-      passwordHash: passwordHash,
-    };
-    const token = tokenUtils.generate(infoForToken);
-
+    // Add user
     const [newUser] = await dbConn.query(query.addUser, [
       username,
       email,
-      passwordHash,
+      passwordHashed,
     ]);
 
     const data = { token: token, id: newUser.insertId };
-
     return jsonRes(res, 'ok', { data: data });
-    // res.status(200).json({ success: true, token: token, id: newUser.insertId });
   } catch (error) {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
@@ -53,20 +52,16 @@ const login = async (req, res) => {
 
   try {
     dbConn = await db.getConnection();
-    const [users] = await conn.query(query.getUserByEmail, [email]);
+    const [users] = await dbConn.query(query.getUserByEmail, [email]);
     const user = users[0];
 
-    //Check if email exists and pass is correct
     const isUserAndPassOk = !user
       ? false
       : await bcrypt.compare(password, user.password);
 
     //If FALSE
     if (!isUserAndPassOk) {
-      return jsonRes(res, '401');
-      //   return res
-      //     .status(401)
-      //     .json({ success: false, errorMessage: 'Invalid credentials' });
+      return jsonRes(res, '401', { error: MSG.INVALID_CREDENTIALS });
     }
     //If TRUE
     const infoForToken = {
@@ -76,11 +71,6 @@ const login = async (req, res) => {
     const token = tokenUtils.generate(infoForToken);
     const data = { token: token, username: user.username };
     return jsonRes(res, 'ok', { data: data });
-    // return res.status(200).json({
-    //   success: true,
-    //   token,
-    //   username: user.username,
-    // });
   } catch (error) {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
