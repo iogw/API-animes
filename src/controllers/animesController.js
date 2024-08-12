@@ -5,16 +5,11 @@ const jsonRes = require('../utils/apiResponse');
 const errorMsgMaxReached = 'No more registrations allowed';
 const errorMsgTitleRepeat = 'This title already exists';
 
-function endDbConn(dbConn) {
-  if (dbConn) dbConn.end();
-  console.log('Database connection ended');
-}
-
 // endpoints
 const listAll = async (req, res) => {
   let dbConn;
   try {
-    const dbConn = await db.getConnection();
+    dbConn = await db.getConnection();
     const [results] = await dbConn.query(query.getAll);
 
     let data = {
@@ -26,7 +21,7 @@ const listAll = async (req, res) => {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
   } finally {
-    endDbConn(dbConn);
+    db.endConnection(dbConn);
   }
 };
 
@@ -35,7 +30,7 @@ const listOne = async (req, res) => {
   let dbConn;
 
   try {
-    const dbConn = await db.getConnection();
+    dbConn = await db.getConnection();
     const [animes] = await dbConn.query(query.getById, [ID]);
     const anime = animes[0];
 
@@ -46,7 +41,7 @@ const listOne = async (req, res) => {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
   } finally {
-    endDbConn(dbConn);
+    db.endConnection(dbConn);
   }
 };
 
@@ -56,9 +51,9 @@ const addNew = async (req, res) => {
   let dbConn;
 
   try {
-    const dbConn = await db.getConnection();
-    // Checks
+    dbConn = await db.getConnection();
 
+    // Checks
     const [[{ total_of_animes }]] = await dbConn.query(query.getTotalCount);
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
 
@@ -76,7 +71,7 @@ const addNew = async (req, res) => {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
   } finally {
-    endDbConn(dbConn);
+    db.endConnection(dbConn);
   }
 };
 
@@ -87,7 +82,7 @@ const updateAni = async (req, res) => {
   let dbConn;
 
   try {
-    const dbConn = await db.getConnection();
+    dbConn = await db.getConnection();
 
     // Checks
     const [animeDataOri] = await dbConn.query(query.getById, [paramsId]);
@@ -107,7 +102,7 @@ const updateAni = async (req, res) => {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
   } finally {
-    endDbConn(dbConn);
+    db.endConnection(dbConn);
   }
 };
 
@@ -116,7 +111,7 @@ const deleteAni = async (req, res) => {
   let dbConn;
 
   try {
-    const dbConn = await db.getConnection();
+    dbConn = await db.getConnection();
 
     // Checks
     const [animes] = await dbConn.query(query.getById, [paramsId]);
@@ -129,7 +124,7 @@ const deleteAni = async (req, res) => {
     console.error(error);
     return jsonRes(res, 'internalServerError', { error: error.errno });
   } finally {
-    endDbConn(dbConn);
+    db.endConnection(dbConn);
   }
 };
 

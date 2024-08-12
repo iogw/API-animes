@@ -15,5 +15,9 @@ async function getConnection() {
   );
   return connection;
 }
+function endConnection(connection) {
+  if (connection) connection.end();
+  console.log(`Database connection ended (identifier=${connection.threadId})`);
+}
 
-module.exports = { getConnection };
+module.exports = { getConnection, endConnection };
