@@ -1,5 +1,5 @@
-class ApiResponseTwo {
-  constructor(res, data = null, error = []) {
+class ApiResponse {
+  constructor(res, data = null, error = null) {
     this.res = res;
     this.data = data;
     this.error = error;
@@ -42,7 +42,30 @@ class ApiResponseTwo {
     const msg = 'Internal server error';
     return this.responseBuilder(code, success, msg);
   }
-
 }
 
-module.exports = ApiResponseTwo;
+function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
+  const jsonRes = new ApiResponse(res, data, error);
+
+  if (typeof jsonRes[method] === 'function') {
+    return jsonRes[method]();
+  } else {
+    return console.log('CHECK CONTROLLER: METHOD NAME');
+  }
+}
+function personalizedRes(name, res, error = null) {
+  if ((name = 'maxReached'))
+    return jsonRes(res, 'badRequest', {
+      error: 'No more registrations allowed',
+    });
+
+  if ((name = 'titleAlreadyExists'))
+    return jsonRes(res, 'badRequest', {
+      error: 'This title already exists',
+    });
+}
+
+
+
+
+module.exports = ApiResponse;
