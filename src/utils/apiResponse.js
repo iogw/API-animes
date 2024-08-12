@@ -1,35 +1,57 @@
 class ApiResponse {
-  constructor(res) {
+  constructor(res, data = null, error = null) {
     this.res = res;
+    this.data = data;
+    this.error = error;
   }
-
-  success(data = null, message = 'Request successful', statusCode = 200) {
-    return this.res.status(statusCode).json({
-      success: true,
-      data,
-      message,
-      errors: null,
+  responseBuilder(code, success, msg) {
+    return this.res.status(code).json({
+      success: success,
+      message: msg,
+      data: this.data,
+      error: this.error,
     });
   }
-
-  error(message = 'An error occurred', errors = [], statusCode = 400) {
-    return this.res.status(statusCode).json({
-      success: false,
-      data: null,
-      message,
-      errors,
-    });
+  ok() {
+    const code = 200;
+    const success = true;
+    const msg = 'Request made successfully';
+    return this.responseBuilder(code, success, msg);
+  }
+  created() {
+    const code = 201;
+    const success = true;
+    const msg = 'Resource created successfully';
+    return this.responseBuilder(code, success, msg);
+  }
+  badRequest() {
+    const code = 400;
+    const success = false;
+    const msg = 'Bad request';
+    return this.responseBuilder(code, success, msg);
+  }
+  notFound() {
+    const code = 404;
+    const success = false;
+    const msg = 'Resource not found';
+    return this.responseBuilder(code, success, msg);
+  }
+  internalServerError() {
+    const code = 500;
+    const success = false;
+    const msg = 'Internal server error';
+    return this.responseBuilder(code, success, msg);
   }
 }
 
-class CustomResponses extends ApiResponse {
-  notFound(message = 'Resource not found') {
-    return this.error(message, [], 404);
-  }
+function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
+  const jsonRes = new ApiResponse(res, data, error);
 
-  created(data, message = 'Resource created successfully') {
-    return this.success(data, message, 201);
+  if (typeof jsonRes[method] === 'function') {
+    return jsonRes[method]();
+  } else {
+    return console.log('CHECK CONTROLLER: METHOD NAME');
   }
 }
 
-module.exports = { CustomResponses };
+module.exports =  jsonRes ;

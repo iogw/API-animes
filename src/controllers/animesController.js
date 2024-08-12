@@ -1,27 +1,9 @@
 const db = require('../config/db');
 const query = require('../queries/animesQueries');
-const ApiResponse = require('../utils/apiResponseTwo');
+const jsonRes = require('../utils/apiResponse');
 
-function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
-  const jsonRes = new ApiResponse(res, data, error);
-
-  if (typeof jsonRes[method] === 'function') {
-    return jsonRes[method]();
-  } else {
-    return console.log('CHECK CONTROLLER: METHOD NAME');
-  }
-}
-function personalizedRes(name, res, error = null) {
-  if (name === 'maxReached')
-    return jsonRes(res, 'badRequest', {
-      error: 'No more registrations allowed',
-    });
-
-  if (name === 'titleAlreadyExists')
-    return jsonRes(res, 'badRequest', {
-      error: 'This title already exists',
-    });
-}
+const errorMsgMaxReached = 'No more registrations allowed';
+const errorMsgTitleRepeat = 'This title already exists';
 
 function endDbConn(dbConn) {
   if (dbConn) dbConn.end();
@@ -76,10 +58,15 @@ const addNew = async (req, res) => {
   try {
     const dbConn = await db.getConnection();
     // Checks
+
     const [[{ total_of_animes }]] = await dbConn.query(query.getTotalCount);
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
-    if (total_of_animes >= MAX_COUNT) return personalizedRes('maxReached', res);
-    if (animeByTitle[0]) return personalizedRes('titleAlreadyExists', res);
+
+    if (total_of_animes >= MAX_COUNT)
+      return jsonRes(res, 'badRequest', { error: errorMsgMaxReached });
+
+    if (animeByTitle[0])
+      return jsonRes(res, 'badRequest', { error: errorMsgTitleRepeat });
 
     // Insert new data
     const [addedRes] = await dbConn.query(query.add, [title, year, chapters]);
@@ -105,9 +92,10 @@ const updateAni = async (req, res) => {
     // Checks
     const [animeDataOri] = await dbConn.query(query.getById, [paramsId]);
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
+
     if (!animeDataOri[0]) return jsonRes(res, 'notFound');
     if (animeByTitle[0] && animeByTitle[0].idAnime !== parseInt(paramsId))
-      return personalizedRes('titleAlreadyExists', res);
+      return jsonRes(res, 'badRequest', { error: errorMsgTitleRepeat });
 
     // Update
     await dbConn.query(query.update, [title, year, chapters, paramsId]);
