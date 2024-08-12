@@ -1,5 +1,5 @@
 const getAll = 'SELECT * FROM animes;';
-const getTotalCount = 'SELECT COUNT(*) AS total_of_animes FROM animes;';
+const getTotalCount = 'SELECT COUNT(*) AS db_count FROM animes;';
 const add = 'INSERT INTO animes (title, year, chapters) VALUES (?, ?, ?);';
 const update =
   'UPDATE animes SET title = ?, year = ?, chapters = ? WHERE idAnime = ?;';

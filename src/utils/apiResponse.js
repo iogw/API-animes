@@ -59,5 +59,10 @@ function jsonRes(res, method, { data = undefined, error = undefined } = {}) {
     return console.log('CHECK CONTROLLER: METHOD NAME');
   }
 }
+const MSG = {
+  MAX_REACHED: 'No more registrations allowed',
+  TITLE_REPEATED: 'This title already exists',
+  ALREADY_REGISTERED: 'This email is already registered',
+};
 
-module.exports = jsonRes;
+module.exports = { jsonRes, MSG };

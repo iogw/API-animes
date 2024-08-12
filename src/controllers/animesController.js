@@ -1,9 +1,6 @@
 const db = require('../config/db');
 const query = require('../queries/animesQueries');
-const jsonRes = require('../utils/apiResponse');
-
-const errorMsgMaxReached = 'No more registrations allowed';
-const errorMsgTitleRepeat = 'This title already exists';
+const { jsonRes, MSG } = require('../utils/apiResponse');
 
 // endpoints
 const listAll = async (req, res) => {
@@ -54,14 +51,14 @@ const addNew = async (req, res) => {
     dbConn = await db.getConnection();
 
     // Checks
-    const [[{ total_of_animes }]] = await dbConn.query(query.getTotalCount);
+    const [[{ db_count }]] = await dbConn.query(query.getTotalCount);
     const [animeByTitle] = await dbConn.query(query.getByTitle, [title]);
 
-    if (total_of_animes >= MAX_COUNT)
-      return jsonRes(res, 'badRequest', { error: errorMsgMaxReached });
+    if (db_count >= MAX_COUNT)
+      return jsonRes(res, 'badRequest', { error: MSG.MAX_REACHED });
 
     if (animeByTitle[0])
-      return jsonRes(res, 'badRequest', { error: errorMsgTitleRepeat });
+      return jsonRes(res, 'badRequest', { error: MSG.TITLE_REPEATED });
 
     // Insert new data
     const [addedRes] = await dbConn.query(query.add, [title, year, chapters]);
@@ -90,7 +87,7 @@ const updateAni = async (req, res) => {
 
     if (!animeDataOri[0]) return jsonRes(res, 'notFound');
     if (animeByTitle[0] && animeByTitle[0].idAnime !== parseInt(paramsId))
-      return jsonRes(res, 'badRequest', { error: errorMsgTitleRepeat });
+      return jsonRes(res, 'badRequest', { error: MSG.TITLE_REPEATED });
 
     // Update
     await dbConn.query(query.update, [title, year, chapters, paramsId]);
