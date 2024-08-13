@@ -30,10 +30,16 @@ class ApiResponse {
     const msg = 'Bad request';
     return this.responseBuilder(code, success, msg);
   }
-  401() {
+  unauthorized() {
     const code = 401;
     const success = false;
     const msg = 'Unauthorized';
+    return this.responseBuilder(code, success, msg);
+  }
+  forbidden() {
+    const code = 403;
+    const success = false;
+    const msg = 'Forbidden';
     return this.responseBuilder(code, success, msg);
   }
   notFound() {
@@ -64,6 +70,8 @@ const MSG = {
   TITLE_REPEATED: 'This title already exists',
   ALREADY_REGISTERED: 'This email is already registered',
   INVALID_CREDENTIALS: 'Invalid credentials',
+  INVALID_TOKEN: 'Invalid token',
+  TOKEN_NOT_PROVIDED: 'Token not provided',
 };
 
 module.exports = { jsonRes, MSG };
