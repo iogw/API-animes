@@ -9,12 +9,7 @@ const controller = require('../controllers/animesController');
 router.get('/', controller.listAll);
 router.get('/:id', validate.id, controller.listOne);
 
-router.post(
-  '/',
-  authenticate,
-  validate.data,
-  controller.addNew
-);
+router.post('/', authenticate, validate.data, controller.addNew);
 
 router.put(
   '/:id',

@@ -9,12 +9,11 @@ const signup = async (req, res) => {
   const MAX_COUNT = 10;
   const { username, email, password } = req.body;
   const passwordHashed = await bcrypt.hash(password, 10);
-  let infoForToken = {
+  let payload = {
     username: username,
     email: email,
-    passwordHash: passwordHashed,
   };
-  const token = tokenUtils.generate(infoForToken);
+  const token = tokenUtils.generate(payload);
   let dbConn;
 
   try {
@@ -24,10 +23,10 @@ const signup = async (req, res) => {
     const [[{ db_count }]] = await dbConn.query(query.getTotalCount);
     const [users] = await dbConn.query(query.getUserByEmail, [email]);
 
-    if (db_count >= MAX_COUNT)
-      return jsonRes(res, 'badRequest', { error: MSG.MAX_REACHED });
     if (users[0])
       return jsonRes(res, 'badRequest', { error: MSG.ALREADY_REGISTERED });
+    if (db_count >= MAX_COUNT)
+      return jsonRes(res, 'badRequest', { error: MSG.MAX_REACHED });
 
     // Add user
     const [newUser] = await dbConn.query(query.addUser, [
@@ -52,24 +51,24 @@ const login = async (req, res) => {
 
   try {
     dbConn = await db.getConnection();
-    const [users] = await dbConn.query(query.getUserByEmail, [email]);
-    const user = users[0];
+    const [dbUsers] = await dbConn.query(query.getUserByEmail, [email]);
+    const dbUser = dbUsers[0];
 
-    const isUserAndPassOk = !user
+    // Checks
+    const isUserAndPassOk = !dbUser
       ? false
-      : await bcrypt.compare(password, user.password);
-
-    //If FALSE
+      : await bcrypt.compare(password, dbUser.password);
     if (!isUserAndPassOk) {
-      return jsonRes(res, '401', { error: MSG.INVALID_CREDENTIALS });
+      return jsonRes(res, 'unauthorized', { error: MSG.INVALID_CREDENTIALS });
     }
-    //If TRUE
-    const infoForToken = {
-      username: user.email,
-      id: user.id,
+
+    // Login
+    const payload = {
+      id: dbUser.id,
+      username: dbUser.username,
     };
-    const token = tokenUtils.generate(infoForToken);
-    const data = { token: token, username: user.username };
+    const token = tokenUtils.generate(payload);
+    const data = { token: token, username: dbUser.username };
     return jsonRes(res, 'ok', { data: data });
   } catch (error) {
     console.error(error);
