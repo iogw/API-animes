@@ -74,15 +74,15 @@
             }
           },
           "400": {
-            "description": "invalid title/year/chapters supplied",
+            "description": "invalid title/year/chapters supplied or maximum limit reached or title already in database",
             "schema": {
               "$ref": "#/definitions/error"
             }
           },
-          "401": {
+          "403": {
             "description": "not provided/invalid token",
             "schema": {
-              "$ref": "#/definitions/error-token"
+              "$ref": "#/definitions/error"
             }
           },
           "500": {
@@ -121,7 +121,7 @@
           "400": {
             "description": "invalid ID supplied",
             "schema": {
-              "$ref": "#/definitions/error-token"
+              "$ref": "#/definitions/error"
             }
           },
           "404": {
@@ -178,7 +178,13 @@
             }
           },
           "400": {
-            "description": "invalid ID/title/year/chapters supplied",
+            "description": "invalid ID/title/year/chapters supplied or title already exists in database",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "403": {
+            "description": "not provided/invalid token",
             "schema": {
               "$ref": "#/definitions/error"
             }
@@ -189,12 +195,7 @@
               "$ref": "#/definitions/error"
             }
           },
-          "401": {
-            "description": "not provided/invalid token",
-            "schema": {
-              "$ref": "#/definitions/error-token"
-            }
-          },
+
           "500": {
             "description": "database error",
             "schema": {
@@ -229,11 +230,7 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "type": "object",
-              "properties": {
-                "success": { "type": "boolean" },
-                "msg": { "type": "string" }
-              }
+              "$ref": "#/definitions/error"
             }
           },
           "400": {
@@ -242,16 +239,16 @@
               "$ref": "#/definitions/error"
             }
           },
-          "404": {
-            "description": "anime not found",
+          "403": {
+            "description": "not provided/invalid token",
             "schema": {
               "$ref": "#/definitions/error"
             }
           },
-          "401": {
-            "description": "not privided/invalid token",
+          "404": {
+            "description": "anime not found",
             "schema": {
-              "$ref": "#/definitions/error-token"
+              "$ref": "#/definitions/error"
             }
           },
           "500": {
@@ -289,7 +286,7 @@
             }
           },
           "400": {
-            "description": "invalid username/email/password supplied",
+            "description": "invalid username/email/password supplied or email already registered or maximum limit reached",
             "schema": {
               "$ref": "#/definitions/error"
             }
@@ -334,6 +331,12 @@
               "$ref": "#/definitions/error"
             }
           },
+          "401": {
+            "description": "invalid credentials",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
           "500": {
             "description": "database error",
             "schema": {
@@ -364,77 +367,44 @@
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
-        "info": {
+        "message": { "type": "string" },
+        "data": {
           "type": "object",
           "properties": {
-            "count": { "type": "integer" }
-          }
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "type": "object",
+            "count": { "type": "integer" },
+            "results": {
+              "type": "array",
+              "items": {
+                "type": "object",
 
-            "properties": {
-              "idAnime": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "title": {
-                "type": "string"
-              },
-              "year": {
-                "type": "integer"
-              },
-              "chapters": {
-                "type": "integer"
+                "properties": {
+                  "idAnime": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "year": {
+                    "type": "integer"
+                  },
+                  "chapters": {
+                    "type": "integer"
+                  }
+                }
               }
             }
           }
-        }
+        },
+        "error": { "type": "string" }
       }
     },
     "list-one-anime-response": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
-        "results": {
-          "type": "object",
-          "properties": {
-            "idAnime": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "title": {
-              "type": "string"
-            },
-            "year": {
-              "type": "integer"
-            },
-            "chapters": {
-              "type": "integer"
-            }
-          }
-        }
-      }
-    },
-    "anime-add-response": {
-      "type": "object",
-      "properties": {
-        "success": { "type": "boolean" },
-        "msg": { "type": "string" },
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "anime-update-response": {
-      "type": "object",
-      "properties": {
-        "success": { "type": "boolean" },
-        "msg": { "type": "string" },
-        "previous data": {
+        "message": { "type": "string" },
+        "data": {
           "type": "object",
           "properties": {
             "idAnime": {
@@ -452,24 +422,73 @@
             }
           }
         },
-        "new data": {
+        "error": { "type": "string" }
+      }
+    },
+    "anime-add-response": {
+      "type": "object",
+      "properties": {
+        "success": { "type": "boolean" },
+        "message": { "type": "string" },
+        "data": {
           "type": "object",
           "properties": {
-            "idAnime": {
+            "id": {
               "type": "integer",
               "format": "int64"
-            },
-            "title": {
-              "type": "string"
-            },
-            "year": {
-              "type": "integer"
-            },
-            "chapters": {
-              "type": "integer"
             }
           }
-        }
+        },
+        "error": { "type": "string" }
+      }
+    },
+    "anime-update-response": {
+      "type": "object",
+      "properties": {
+        "success": { "type": "boolean" },
+        "message": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "previous data": {
+              "type": "object",
+              "properties": {
+                "idAnime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "year": {
+                  "type": "integer"
+                },
+                "chapters": {
+                  "type": "integer"
+                }
+              }
+            },
+            "new data": {
+              "type": "object",
+              "properties": {
+                "idAnime": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "year": {
+                  "type": "integer"
+                },
+                "chapters": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "error": { "type": "string" }
       }
     },
     "signup-request": {
@@ -491,8 +510,15 @@
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
-        "token": { "type": "string" },
-        "id": { "type": "number" }
+        "message": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "id": { "type": "number" }
+          }
+        },
+        "error": { "type": "string" }
       }
     },
     "login-request": {
@@ -511,20 +537,23 @@
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
-        "token": { "type": "string" },
-        "username": { "type": "string" }
+        "message": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "token": { "type": "string" },
+            "username": { "type": "string" }
+          }
+        },
+        "error": { "type": "string" }
       }
     },
     "error": {
       "type": "object",
       "properties": {
         "success": { "type": "boolean" },
-        "error": { "type": "string" }
-      }
-    },
-    "error-token": {
-      "type": "object",
-      "properties": {
+        "message": { "type": "string" },
+        "data": { "type": "string" },
         "error": { "type": "string" }
       }
     }
