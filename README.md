@@ -190,7 +190,5 @@ En este proceso me llevo:
 
 ##
 
-¡Gracias por pasarte!
-
-[Irene García Wodak](https://github.com/irenegwodak) 🖖
+¡Gracias por pasarte! 🖖
 
